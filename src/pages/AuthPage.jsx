@@ -191,7 +191,7 @@ function Input({
   );
 }
 
-function AuthPage({ onLogin }) {
+function AuthPage({ onLogin, onOpenTerms }) {
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
@@ -202,10 +202,17 @@ function AuthPage({ onLogin }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("buyer");
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+
+    if (mode === "register" && !agreeTerms) {
+      setError("You must accept the Terms and Conditions to create an account");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -423,6 +430,44 @@ function AuthPage({ onLogin }) {
               required
             />
 
+            {mode === "register" && (
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
+                  marginBottom: 16,
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: C.textDim,
+                  lineHeight: 1.5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: C.amber, flexShrink: 0 }}
+                />
+                <span>
+                  I agree to PaxeL's{" "}
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onOpenTerms?.();
+                    }}
+                    style={{
+                      color: C.amber,
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Terms and Conditions
+                  </span>
+                </span>
+              </label>
+            )}
+
             {error && (
               <div
                 style={{
@@ -441,13 +486,22 @@ function AuthPage({ onLogin }) {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === "register" && !agreeTerms)}
               style={{
                 width: "100%",
                 border: "none",
-                cursor: loading ? "not-allowed" : "pointer",
-                background: loading ? C.border : C.amber,
-                color: loading ? C.textDim : "#0A0A0F",
+                cursor:
+                  loading || (mode === "register" && !agreeTerms)
+                    ? "not-allowed"
+                    : "pointer",
+                background:
+                  loading || (mode === "register" && !agreeTerms)
+                    ? C.border
+                    : C.amber,
+                color:
+                  loading || (mode === "register" && !agreeTerms)
+                    ? C.textDim
+                    : "#0A0A0F",
                 fontWeight: 700,
                 fontSize: 15,
                 padding: "14px 0",

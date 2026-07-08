@@ -15,6 +15,9 @@ const C = {
   textDim: "#9CA0AE",
 };
 
+const API =
+  import.meta.env.VITE_API_URL || "https://paxel-backend.onrender.com";
+
 const STEPS = [
   { state: "SECURED", label: "Funds locked in escrow", color: C.amber },
   { state: "DISPATCHED", label: "Goods in transit", color: C.amber },
@@ -928,6 +931,34 @@ export default function App() {
   const [view, setView] = useState("landing");
   const [authMode, setAuthMode] = useState("login");
   const [user, setUser] = useState(null);
+
+  // Handles the redirect back from Google OAuth (Passport backend).
+  // If the backend sends the browser back with ?token=... in the URL
+  // (e.g. after redirecting to /dashboard?token=xxx), pick it up here,
+  // fetch the user, and drop them on the Coming Soon page — instead of
+  // Vercel 404ing on a path that doesn't exist as a static route.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (!token) return;
+
+    localStorage.setItem("paxel_token", token);
+
+    fetch(`${API}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const loggedInUser = data.user || data;
+        localStorage.setItem("paxel_user", JSON.stringify(loggedInUser));
+        setUser(loggedInUser);
+        setView("welcome");
+      })
+      .catch(() => setView("landing"))
+      .finally(() => {
+        window.history.replaceState({}, "", "/");
+      });
+  }, []);
 
   function handleLogin(loggedInUser) {
     setUser(loggedInUser);

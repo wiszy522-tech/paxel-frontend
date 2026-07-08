@@ -11,13 +11,13 @@ const DARK = {
 };
 
 const LIGHT = {
-  bg: "#F7F5F0",
-  surface: "#FFFFFF",
-  border: "#E3DFD4",
+  bg: "#F3ECDA",
+  surface: "#FAF5EA",
+  border: "#E0D3B8",
   amber: "#B9790A",
-  jade: "#2C8659",
-  text: "#1C1A15",
-  textDim: "#6B6658",
+  jade: "#256B45",
+  text: "#231F16",
+  textDim: "#7A7160",
 };
 
 const UPCOMING = [
@@ -200,7 +200,7 @@ export default function ComingSoonPage({ user, onLogout }) {
             display: "inline-block",
           }}
         />
-        You're in — account active
+        Account active
       </div>
 
       <h1
@@ -227,8 +227,7 @@ export default function ComingSoonPage({ user, onLogout }) {
         }}
       >
         Your account is live, but the marketplace is still under construction.
-        We're bolting the vault door on before we let anyone start trading —
-        it'll be worth the wait.
+        We're bolting the vault door on before we let anyone start trading.
       </p>
 
       <div
@@ -301,9 +300,7 @@ export default function ComingSoonPage({ user, onLogout }) {
         }}
       >
         We'll notify you the moment trading opens.{" "}
-        <strong style={{ color: C.text }}>
-          Chill — updates will soon be pushed.
-        </strong>
+        <strong style={{ color: C.text }}>Updates will be pushed soon.</strong>
       </p>
 
       <button

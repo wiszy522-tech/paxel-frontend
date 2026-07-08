@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AuthPage from "./pages/AuthPage";
 
 const C = {
   bg: "#0A0A0F",
@@ -224,95 +225,6 @@ function NavBar({ onAuthClick }) {
         </button>
       </div>
     </nav>
-  );
-}
-
-function ComingSoonModal({ onClose }) {
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 999,
-        background: "rgba(0,0,0,0.8)",
-        backdropFilter: "blur(8px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: C.surface,
-          border: `1px solid ${C.border}`,
-          borderRadius: 20,
-          padding: "40px 36px",
-          maxWidth: 400,
-          width: "100%",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <h2
-          style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: 26,
-            color: C.text,
-            marginBottom: 12,
-          }}
-        >
-          Almost there.
-        </h2>
-        <p
-          style={{
-            fontSize: 15,
-            color: C.textDim,
-            lineHeight: 1.7,
-            marginBottom: 28,
-          }}
-        >
-          We're putting the final locks on the vault.
-          <br />
-          <strong style={{ color: C.amber }}>
-            Chill — updates will soon be pushed.
-          </strong>
-        </p>
-        <div
-          style={{
-            background: "rgba(242,169,59,0.08)",
-            border: `1px solid rgba(242,169,59,0.2)`,
-            borderRadius: 10,
-            padding: "12px 16px",
-            marginBottom: 24,
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 12,
-            color: C.amber,
-          }}
-        >
-          status: building_in_progress
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: C.amber,
-            border: "none",
-            color: "#0A0A0F",
-            fontWeight: 700,
-            fontSize: 15,
-            padding: "12px 28px",
-            borderRadius: 10,
-            cursor: "pointer",
-            width: "100%",
-          }}
-        >
-          Got it, I'll wait
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -976,9 +888,7 @@ function Footer() {
   );
 }
 
-export default function App() {
-  const [showModal, setShowModal] = useState(false);
-
+function LandingPage({ onAuthClick }) {
   return (
     <div
       style={{
@@ -1001,14 +911,28 @@ export default function App() {
         }
       `}</style>
 
-      {showModal && <ComingSoonModal onClose={() => setShowModal(false)} />}
-      <NavBar onAuthClick={() => setShowModal(true)} />
-      <Hero onAuthClick={() => setShowModal(true)} />
+      <NavBar onAuthClick={onAuthClick} />
+      <Hero onAuthClick={onAuthClick} />
       <HowItWorks />
       <NombaSection />
       <TrustSection />
-      <CTA onAuthClick={() => setShowModal(true)} />
+      <CTA onAuthClick={onAuthClick} />
       <Footer />
     </div>
   );
+}
+
+export default function App() {
+  const [view, setView] = useState("landing");
+
+  function handleLogin(user) {
+    console.log("Logged in as", user);
+    setView("landing");
+  }
+
+  if (view === "auth") {
+    return <AuthPage onLogin={handleLogin} />;
+  }
+
+  return <LandingPage onAuthClick={() => setView("auth")} />;
 }

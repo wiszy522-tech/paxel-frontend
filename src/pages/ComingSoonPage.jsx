@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const C = {
+const DARK = {
   bg: "#0A0A0F",
   surface: "#1C1F2B",
   border: "#2A2E3D",
@@ -8,6 +8,16 @@ const C = {
   jade: "#3FA66B",
   text: "#F1EDE3",
   textDim: "#9CA0AE",
+};
+
+const LIGHT = {
+  bg: "#F7F5F0",
+  surface: "#FFFFFF",
+  border: "#E3DFD4",
+  amber: "#B9790A",
+  jade: "#2C8659",
+  text: "#1C1A15",
+  textDim: "#6B6658",
 };
 
 const UPCOMING = [
@@ -54,6 +64,17 @@ function useTypewriter(lines, speed = 28, pause = 1400) {
 export default function ComingSoonPage({ user, onLogout }) {
   const firstName = user?.name ? user.name.split(" ")[0] : "there";
 
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("paxel_theme") || "dark",
+  );
+  const C = theme === "dark" ? DARK : LIGHT;
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("paxel_theme", next);
+  }
+
   const statusLine = useTypewriter([
     "building_in_progress...",
     "wiring_up_the_vault...",
@@ -75,6 +96,7 @@ export default function ComingSoonPage({ user, onLogout }) {
         padding: "60px 5vw",
         position: "relative",
         overflow: "hidden",
+        transition: "background 0.3s ease, color 0.3s ease",
       }}
     >
       <style>{`
@@ -92,6 +114,33 @@ export default function ComingSoonPage({ user, onLogout }) {
           50% { opacity: 0; }
         }
       `}</style>
+
+      <button
+        onClick={toggleTheme}
+        aria-label="Toggle light/dark theme"
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 2,
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          color: C.text,
+          cursor: "pointer",
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 17,
+          transition: "border-color 0.2s, background 0.3s ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.amber)}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+      >
+        {theme === "dark" ? "☀️" : "🌙"}
+      </button>
 
       <div
         style={{
@@ -194,6 +243,7 @@ export default function ComingSoonPage({ user, onLogout }) {
           color: C.amber,
           minWidth: 260,
           textAlign: "center",
+          transition: "background 0.3s ease, border-color 0.3s ease",
         }}
       >
         status: {statusLine}
@@ -223,6 +273,7 @@ export default function ComingSoonPage({ user, onLogout }) {
               alignItems: "center",
               gap: 8,
               textAlign: "center",
+              transition: "background 0.3s ease, border-color 0.3s ease",
             }}
           >
             <span style={{ fontSize: 22 }}>{f.icon}</span>

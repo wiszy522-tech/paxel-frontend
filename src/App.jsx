@@ -18,6 +18,22 @@ const C = {
 const API =
   import.meta.env.VITE_API_URL || "https://paxel-backend.onrender.com";
 
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 const STEPS = [
   { state: "SECURED", label: "Funds locked in escrow", color: C.amber },
   { state: "DISPATCHED", label: "Goods in transit", color: C.amber },
@@ -933,10 +949,10 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   // Handles the redirect back from Google OAuth (Passport backend).
-  // If the backend sends the browser back with ?token=... in the URL
-  // (e.g. after redirecting to /dashboard?token=xxx), pick it up here,
-  // fetch the user, and drop them on the Coming Soon page — instead of
-  // Vercel 404ing on a path that doesn't exist as a static route.
+  // The backend sends the browser back with ?token=... in the URL
+  // (e.g. after redirecting to /dashboard?token=xxx). We decode the
+  // JWT client-side instead of calling a backend /auth/me endpoint,
+  // since that route is CORS-blocked from the Vercel origin.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
@@ -944,20 +960,16 @@ export default function App() {
 
     localStorage.setItem("paxel_token", token);
 
-    fetch(`${API}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const loggedInUser = data.user || data;
-        localStorage.setItem("paxel_user", JSON.stringify(loggedInUser));
-        setUser(loggedInUser);
-        setView("welcome");
-      })
-      .catch(() => setView("landing"))
-      .finally(() => {
-        window.history.replaceState({}, "", "/");
-      });
+    const decoded = parseJwt(token);
+    if (decoded) {
+      localStorage.setItem("paxel_user", JSON.stringify(decoded));
+      setUser(decoded);
+      setView("welcome");
+    } else {
+      setView("landing");
+    }
+
+    window.history.replaceState({}, "", "/");
   }, []);
 
   function handleLogin(loggedInUser) {

@@ -454,6 +454,7 @@ function AuthPage({ onLogin, onOpenTerms }) {
                   <span
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       onOpenTerms?.();
                     }}
                     style={{

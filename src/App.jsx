@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import AuthPage from "./pages/AuthPage";
+import TermsPage from "./pages/TermsPage";
 
 const C = {
   bg: "#0A0A0F",
@@ -931,7 +932,13 @@ export default function App() {
   }
 
   if (view === "auth") {
-    return <AuthPage onLogin={handleLogin} />;
+    return (
+      <AuthPage onLogin={handleLogin} onOpenTerms={() => setView("terms")} />
+    );
+  }
+
+  if (view === "terms") {
+    return <TermsPage onBack={() => setView("auth")} />;
   }
 
   return <LandingPage onAuthClick={() => setView("auth")} />;

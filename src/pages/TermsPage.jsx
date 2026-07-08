@@ -260,8 +260,7 @@ export default function TermsPage({ onBack }) {
         <Section title="14. Contact">
           <p>
             If you have questions about these Terms, contact us at{" "}
-            <span style={{ color: C.amber }}>support@paxel.com</span> (replace
-            with your real support address before launch).
+            <span style={{ color: C.amber }}>wiszy522@gmail.com</span>.
           </p>
         </Section>
       </div>

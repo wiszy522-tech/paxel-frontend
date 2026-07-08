@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AuthPage from "./pages/AuthPage";
 import TermsPage from "./pages/TermsPage";
+import ComingSoonPage from "./pages/ComingSoonPage";
 
 const C = {
   bg: "#0A0A0F",
@@ -926,15 +927,27 @@ function LandingPage({ onAuthClick }) {
 export default function App() {
   const [view, setView] = useState("landing");
   const [authMode, setAuthMode] = useState("login");
+  const [user, setUser] = useState(null);
 
-  function handleLogin(user) {
-    console.log("Logged in as", user);
+  function handleLogin(loggedInUser) {
+    setUser(loggedInUser);
+    setView("welcome");
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("paxel_token");
+    localStorage.removeItem("paxel_user");
+    setUser(null);
     setView("landing");
   }
 
   function openAuth(mode) {
     setAuthMode(mode);
     setView("auth");
+  }
+
+  if (view === "welcome") {
+    return <ComingSoonPage user={user} onLogout={handleLogout} />;
   }
 
   if (view === "auth") {

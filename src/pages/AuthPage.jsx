@@ -191,8 +191,8 @@ function Input({
   );
 }
 
-function AuthPage({ onLogin, onOpenTerms }) {
-  const [mode, setMode] = useState("login");
+function AuthPage({ onLogin, onOpenTerms, initialMode = "login" }) {
+  const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState("");

@@ -196,7 +196,7 @@ function NavBar({ onAuthClick }) {
           How it works
         </a>
         <button
-          onClick={onAuthClick}
+          onClick={() => onAuthClick("login")}
           style={{
             background: "transparent",
             border: `1px solid ${C.border}`,
@@ -210,7 +210,7 @@ function NavBar({ onAuthClick }) {
           Login
         </button>
         <button
-          onClick={onAuthClick}
+          onClick={() => onAuthClick("register")}
           style={{
             background: C.amber,
             border: "none",
@@ -319,7 +319,7 @@ function Hero({ onAuthClick }) {
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button
-              onClick={onAuthClick}
+              onClick={() => onAuthClick("register")}
               style={{
                 background: C.amber,
                 border: "none",
@@ -819,7 +819,7 @@ function CTA({ onAuthClick }) {
           is safe until your goods arrive — guaranteed.
         </p>
         <button
-          onClick={onAuthClick}
+          onClick={() => onAuthClick("register")}
           style={{
             background: C.amber,
             border: "none",
@@ -925,15 +925,25 @@ function LandingPage({ onAuthClick }) {
 
 export default function App() {
   const [view, setView] = useState("landing");
+  const [authMode, setAuthMode] = useState("login");
 
   function handleLogin(user) {
     console.log("Logged in as", user);
     setView("landing");
   }
 
+  function openAuth(mode) {
+    setAuthMode(mode);
+    setView("auth");
+  }
+
   if (view === "auth") {
     return (
-      <AuthPage onLogin={handleLogin} onOpenTerms={() => setView("terms")} />
+      <AuthPage
+        onLogin={handleLogin}
+        onOpenTerms={() => setView("terms")}
+        initialMode={authMode}
+      />
     );
   }
 
@@ -941,5 +951,5 @@ export default function App() {
     return <TermsPage onBack={() => setView("auth")} />;
   }
 
-  return <LandingPage onAuthClick={() => setView("auth")} />;
+  return <LandingPage onAuthClick={openAuth} />;
 }

@@ -944,9 +944,19 @@ function LandingPage({ onAuthClick }) {
 }
 
 export default function App() {
-  const [view, setView] = useState("landing");
+  const [view, setView] = useState(() => {
+    const savedToken = localStorage.getItem("paxel_token");
+    return savedToken ? "welcome" : "landing";
+  });
   const [authMode, setAuthMode] = useState("login");
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("paxel_user");
+    try {
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Handles the redirect back from Google OAuth (Passport backend).
   // The backend sends the browser back with ?token=... in the URL

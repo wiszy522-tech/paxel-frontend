@@ -226,9 +226,10 @@ export default function ComingSoonPage({ user, onLogout }) {
           marginBottom: 36,
         }}
       >
-        The engine is already running: escrow, Nomba payments, waybill
-        verification, all live and tested end-to-end. We're putting the final
-        polish on the trading interface. Check back soon to see it in action.
+        Consider this your key card. Behind the scenes, the vault is already
+        built: escrow, Nomba payments, and waybill verification are live and
+        battle-tested. We're just dressing up the front door. Check back soon,
+        we're worth the second visit.
       </p>
 
       <div

@@ -11,10 +11,10 @@ const DARK = {
 };
 
 const LIGHT = {
-  bg: "#F3ECDA",
-  surface: "#FAF5EA",
-  border: "#E0D3B8",
-  amber: "#B9790A",
+  bg: "#F2EADF",
+  surface: "#F8F3EA",
+  border: "#DFD0BC",
+  amber: "#D97D0E",
   jade: "#256B45",
   text: "#231F16",
   textDim: "#7A7160",
@@ -226,8 +226,9 @@ export default function ComingSoonPage({ user, onLogout }) {
           marginBottom: 36,
         }}
       >
-        Your account is live, but the marketplace is still under construction.
-        We're bolting the vault door on before we let anyone start trading.
+        The engine is already running: escrow, Nomba payments, waybill
+        verification, all live and tested end-to-end. We're putting the final
+        polish on the trading interface. Check back soon to see it in action.
       </p>
 
       <div

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const DARK = {
   bg: "#0A0A0F",
@@ -20,6 +20,32 @@ const LIGHT = {
   textDim: "#7A7160",
 };
 
+const BUILD_STATUS = [
+  {
+    label: "Nomba API integration (virtual accounts, webhooks, transfers)",
+    done: true,
+  },
+  { label: "Auth: email/password + Google OAuth, JWT", done: true },
+  { label: "Wallet system: fund, lock, release, withdraw", done: true },
+  {
+    label:
+      "Full trade lifecycle: create, waybill, confirm, dispute, auto-release",
+    done: true,
+  },
+  {
+    label: "Product marketplace: listings, search, categories, image upload",
+    done: true,
+  },
+  { label: "Profile + KYC document upload", done: true },
+  { label: "Real-time chat (Socket.io)", done: true },
+  { label: "Reviews with verified buyer badge", done: true },
+  { label: "Email notifications (Brevo)", done: true },
+  { label: "Transaction & trade history UI", done: true },
+  { label: "AI assistant", done: true },
+  { label: "Didit KYC verification (NIN/BVN)", done: true },
+  { label: "Frontend (React + Vite)", done: false },
+];
+
 const UPCOMING = [
   { icon: "💳", label: "Wallet & funding" },
   { icon: "🔒", label: "Escrow trades" },
@@ -29,36 +55,32 @@ const UPCOMING = [
   { icon: "🚌", label: "Waybill tracking" },
 ];
 
-function useTypewriter(lines, speed = 28, pause = 1400) {
-  const [text, setText] = useState("");
-  const [lineIndex, setLineIndex] = useState(0);
-  const [deleting, setDeleting] = useState(false);
+function useBuildStatus(items, stepDelay = 450, loopPause = 2600) {
+  const [revealed, setRevealed] = useState(0);
 
   useEffect(() => {
-    const current = lines[lineIndex];
-    let timeout;
+    let idx = 0;
+    let timer;
 
-    if (!deleting && text.length < current.length) {
-      timeout = setTimeout(
-        () => setText(current.slice(0, text.length + 1)),
-        speed,
-      );
-    } else if (!deleting && text.length === current.length) {
-      timeout = setTimeout(() => setDeleting(true), pause);
-    } else if (deleting && text.length > 0) {
-      timeout = setTimeout(
-        () => setText(current.slice(0, text.length - 1)),
-        speed / 2,
-      );
-    } else if (deleting && text.length === 0) {
-      setDeleting(false);
-      setLineIndex((i) => (i + 1) % lines.length);
+    function tick() {
+      idx += 1;
+      setRevealed(idx);
+      if (idx < items.length) {
+        timer = setTimeout(tick, stepDelay);
+      } else {
+        timer = setTimeout(() => {
+          idx = 0;
+          setRevealed(0);
+          timer = setTimeout(tick, stepDelay);
+        }, loopPause);
+      }
     }
 
-    return () => clearTimeout(timeout);
-  }, [text, deleting, lineIndex, lines, speed, pause]);
+    timer = setTimeout(tick, stepDelay);
+    return () => clearTimeout(timer);
+  }, [items, stepDelay, loopPause]);
 
-  return text;
+  return revealed;
 }
 
 export default function ComingSoonPage({ user, onLogout }) {
@@ -75,12 +97,14 @@ export default function ComingSoonPage({ user, onLogout }) {
     localStorage.setItem("paxel_theme", next);
   }
 
-  const statusLine = useTypewriter([
-    "building_in_progress...",
-    "wiring_up_the_vault...",
-    "measuring_twice_cutting_once...",
-    "almost_there...",
-  ]);
+  const revealed = useBuildStatus(BUILD_STATUS);
+  const logRef = useRef(null);
+
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [revealed]);
 
   return (
     <div
@@ -112,6 +136,10 @@ export default function ComingSoonPage({ user, onLogout }) {
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
+        }
+        @keyframes itemIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
@@ -233,22 +261,71 @@ export default function ComingSoonPage({ user, onLogout }) {
       </p>
 
       <div
+        ref={logRef}
         style={{
           background: C.surface,
           border: `1px solid ${C.border}`,
           borderRadius: 16,
-          padding: "16px 22px",
+          padding: "18px 22px",
           marginBottom: 40,
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 13,
-          color: C.amber,
-          minWidth: 260,
-          textAlign: "center",
+          minWidth: 300,
+          maxWidth: 520,
+          width: "100%",
+          height: 190,
+          overflowY: "auto",
+          textAlign: "left",
           transition: "background 0.3s ease, border-color 0.3s ease",
         }}
       >
-        status: {statusLine}
-        <span style={{ animation: "blink 1s step-end infinite" }}>▍</span>
+        {BUILD_STATUS.slice(0, revealed).map((item) => (
+          <div
+            key={item.label}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "5px 0",
+              animation: "itemIn 0.35s ease forwards",
+            }}
+          >
+            {item.done ? (
+              <span
+                style={{
+                  color: C.jade,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  flexShrink: 0,
+                }}
+              >
+                ✓
+              </span>
+            ) : (
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  marginTop: 4,
+                  borderRadius: "50%",
+                  background: C.amber,
+                  display: "inline-block",
+                  flexShrink: 0,
+                  animation: "blink 1s step-end infinite",
+                }}
+              />
+            )}
+            <span
+              style={{
+                fontSize: 12.5,
+                lineHeight: 1.5,
+                color: item.done ? C.textDim : C.amber,
+              }}
+            >
+              {item.label}
+              {!item.done && " (currently wiring...)"}
+            </span>
+          </div>
+        ))}
       </div>
 
       <div

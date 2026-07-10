@@ -232,14 +232,13 @@ export default function AuthPage() {
       >
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="PaxeL"
             style={{
-              width: 68,
-              height: 68,
-              borderRadius: 16,
-              marginBottom: 10,
-              boxShadow: "0 8px 32px rgba(242,169,59,.3)",
+              width: 84,
+              height: 84,
+              marginBottom: 6,
+              filter: "drop-shadow(0 8px 24px rgba(242,169,59,.35))",
             }}
           />
           <div

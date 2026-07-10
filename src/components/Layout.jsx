@@ -58,7 +58,7 @@ export function LogoPulse() {
         }
       `}</style>
       <img
-        src="/logo.jpg"
+        src="/logo.png"
         alt="PaxeL"
         style={{
           width: 88,
@@ -81,7 +81,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav({ onAssistant }) {
+export function TopNav() {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -116,11 +116,7 @@ export function TopNav({ onAssistant }) {
           flexShrink: 0,
         }}
       >
-        <img
-          src="/logo.jpg"
-          alt="PaxeL"
-          style={{ height: 30, borderRadius: 6 }}
-        />
+        <img src="/logo.png" alt="PaxeL" style={{ height: 32 }} />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",
@@ -134,27 +130,6 @@ export function TopNav({ onAssistant }) {
       </div>
 
       <div style={{ flex: 1 }} />
-
-      <button
-        onClick={onAssistant}
-        style={{
-          background: T.amberBg,
-          border: `1px solid ${T.amberBorder}`,
-          color: T.amber,
-          borderRadius: 999,
-          padding: "6px 14px",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
-        <span>✨</span>
-        <span className="hide-mobile">AI Assistant</span>
-      </button>
 
       <ThemeToggle />
 
@@ -229,7 +204,7 @@ export function TopNav({ onAssistant }) {
             <button
               onClick={() => {
                 logout();
-                navigate("/");
+                navigate("/auth");
               }}
               style={{
                 width: "100%",
@@ -323,10 +298,10 @@ export function BottomNav() {
   );
 }
 
-export function Layout({ children, onAssistant }) {
+export function Layout({ children }) {
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav onAssistant={onAssistant} />
+      <TopNav />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -11,8 +11,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AssistantWidget from "./components/AssistantWidget";
 import { api } from "./utils/api";
-import { useEffect } from "react";
 
+import Landing from "./pages/Landing";
 import AuthPage from "./pages/Auth";
 import TermsPage from "./pages/TermsPage";
 import Home from "./pages/Home";
@@ -31,7 +31,7 @@ function GoogleCallback() {
   useEffect(() => {
     const token = params.get("token");
     if (!token) {
-      navigate("/");
+      navigate("/auth");
       return;
     }
     localStorage.setItem("paxel_token", token);
@@ -40,7 +40,7 @@ function GoogleCallback() {
         login(d.user, token);
         navigate("/home");
       })
-      .catch(() => navigate("/"));
+      .catch(() => navigate("/auth"));
   }, [params, login, navigate]);
 
   return null;
@@ -48,25 +48,25 @@ function GoogleCallback() {
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
   return children;
 }
 
 function AppRoutes() {
-  const [assistantOpen, setAssistantOpen] = useState(false);
-  const openAssistant = () => setAssistantOpen(true);
+  const { user } = useAuth();
 
   return (
     <>
       <Routes>
-        <Route path="/" element={<AuthPage />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<AuthPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/auth/callback" element={<GoogleCallback />} />
         <Route
           path="/home"
           element={
             <ProtectedRoute>
-              <Home onAssistant={openAssistant} />
+              <Home />
             </ProtectedRoute>
           }
         />
@@ -74,7 +74,7 @@ function AppRoutes() {
           path="/products/new"
           element={
             <ProtectedRoute>
-              <NewProduct onAssistant={openAssistant} />
+              <NewProduct />
             </ProtectedRoute>
           }
         />
@@ -82,7 +82,7 @@ function AppRoutes() {
           path="/products/:id"
           element={
             <ProtectedRoute>
-              <ProductDetail onAssistant={openAssistant} />
+              <ProductDetail />
             </ProtectedRoute>
           }
         />
@@ -90,7 +90,7 @@ function AppRoutes() {
           path="/trades"
           element={
             <ProtectedRoute>
-              <Trades onAssistant={openAssistant} />
+              <Trades />
             </ProtectedRoute>
           }
         />
@@ -98,7 +98,7 @@ function AppRoutes() {
           path="/trades/:tradeCode"
           element={
             <ProtectedRoute>
-              <TradeDetail onAssistant={openAssistant} />
+              <TradeDetail />
             </ProtectedRoute>
           }
         />
@@ -106,7 +106,7 @@ function AppRoutes() {
           path="/wallet"
           element={
             <ProtectedRoute>
-              <Wallet onAssistant={openAssistant} />
+              <Wallet />
             </ProtectedRoute>
           }
         />
@@ -114,7 +114,7 @@ function AppRoutes() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <Profile onAssistant={openAssistant} />
+              <Profile />
             </ProtectedRoute>
           }
         />
@@ -122,15 +122,12 @@ function AppRoutes() {
           path="/profile/:userId"
           element={
             <ProtectedRoute>
-              <Profile onAssistant={openAssistant} />
+              <Profile />
             </ProtectedRoute>
           }
         />
       </Routes>
-      <AssistantWidget
-        open={assistantOpen}
-        onClose={() => setAssistantOpen(false)}
-      />
+      {user && <AssistantWidget />}
     </>
   );
 }

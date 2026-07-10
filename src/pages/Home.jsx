@@ -2,13 +2,31 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Layout } from "../components/Layout";
-import { Card, Badge, Spinner, EmptyState, Input } from "../components/UI";
+import { Spinner, EmptyState, Input } from "../components/UI";
 import { api } from "../utils/api";
 
 function ProductCard({ product, onClick }) {
   const { theme: T } = useTheme();
   return (
-    <Card onClick={onClick} style={{ padding: 0, overflow: "hidden" }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: 18,
+        overflow: "hidden",
+        cursor: "pointer",
+        transition: "transform 0.15s, box-shadow 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.boxShadow = `0 12px 28px ${T.shadow}`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
       <div
         style={{
           position: "relative",
@@ -21,34 +39,71 @@ function ProductCard({ product, onClick }) {
           alt={product.title}
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
-        <div style={{ position: "absolute", top: 8, left: 8 }}>
-          <Badge variant="jade">🔒 Escrow</Badge>
-        </div>
-      </div>
-      <div style={{ padding: 14 }}>
         <div
           style={{
-            fontSize: 14,
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "40%",
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.35), transparent)",
+          }}
+        />
+        <div style={{ position: "absolute", top: 10, left: 10 }}>
+          <span
+            style={{
+              background: "rgba(63,166,107,0.92)",
+              color: "#fff",
+              fontSize: 10.5,
+              fontWeight: 700,
+              borderRadius: 999,
+              padding: "4px 9px",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            🔒 Escrow
+          </span>
+        </div>
+      </div>
+      <div style={{ padding: 13 }}>
+        <div
+          style={{
+            fontSize: 13.5,
             fontWeight: 600,
             color: T.text,
-            marginBottom: 4,
-            whiteSpace: "nowrap",
+            marginBottom: 6,
+            lineHeight: 1.3,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            textOverflow: "ellipsis",
+            minHeight: 34,
           }}
         >
           {product.title}
         </div>
         <div
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 16,
-            fontWeight: 700,
-            color: T.amber,
-            marginBottom: 6,
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            marginBottom: 8,
           }}
         >
-          ₦{Number(product.price).toLocaleString()}
+          <span
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 17,
+              fontWeight: 700,
+              color: T.amber,
+            }}
+          >
+            ₦{Number(product.price).toLocaleString()}
+          </span>
         </div>
         <div
           style={{
@@ -57,19 +112,63 @@ function ProductCard({ product, onClick }) {
             justifyContent: "space-between",
           }}
         >
-          <span style={{ fontSize: 12, color: T.textDim }}>
-            {product.location?.state || "Nigeria"}
-          </span>
-          <span style={{ fontSize: 12, color: T.textMuted }}>
-            {product.seller?.name}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: T.amberBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 9,
+                fontWeight: 800,
+                color: T.amber,
+                flexShrink: 0,
+              }}
+            >
+              {product.seller?.name?.[0]?.toUpperCase() || "?"}
+            </div>
+            <span
+              style={{
+                fontSize: 11.5,
+                color: T.textMuted,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {product.seller?.name}
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: 10.5,
+              color: T.textDim,
+              fontWeight: 600,
+              flexShrink: 0,
+              background: T.surfaceAlt,
+              borderRadius: 999,
+              padding: "3px 8px",
+            }}
+          >
+            {product.location?.state || "NG"}
           </span>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
-export default function Home({ onAssistant }) {
+export default function Home() {
   const { theme: T } = useTheme();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -112,7 +211,7 @@ export default function Home({ onAssistant }) {
   }
 
   return (
-    <Layout onAssistant={onAssistant}>
+    <Layout>
       <div style={{ marginBottom: 24 }}>
         <h1
           style={{

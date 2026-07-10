@@ -131,6 +131,26 @@ export function TopNav() {
 
       <div style={{ flex: 1 }} />
 
+      <button
+        onClick={() => navigate("/trades")}
+        title="Trade & transaction history"
+        style={{
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: "50%",
+          width: 36,
+          height: 36,
+          cursor: "pointer",
+          fontSize: 16,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: T.text,
+        }}
+      >
+        🕘
+      </button>
+
       <ThemeToggle />
 
       <div style={{ position: "relative" }}>

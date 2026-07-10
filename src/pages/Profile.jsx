@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Pencil, BadgeCheck } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
@@ -103,7 +104,7 @@ function KycCard() {
   );
 }
 
-export default function Profile({ onAssistant }) {
+export default function Profile() {
   const { theme: T } = useTheme();
   const { userId } = useParams();
   const { user, updateUser } = useAuth();
@@ -191,7 +192,7 @@ export default function Profile({ onAssistant }) {
 
   if (loading) {
     return (
-      <Layout onAssistant={onAssistant}>
+      <Layout>
         <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
           <Spinner size={28} />
         </div>
@@ -200,7 +201,7 @@ export default function Profile({ onAssistant }) {
   }
 
   return (
-    <Layout onAssistant={onAssistant}>
+    <Layout>
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
 
       <div
@@ -234,7 +235,11 @@ export default function Profile({ onAssistant }) {
                 fontSize: 12,
               }}
             >
-              {photoUploading ? <Spinner size={12} color="#0A0A0F" /> : "✏️"}
+              {photoUploading ? (
+                <Spinner size={12} color="#0A0A0F" />
+              ) : (
+                <Pencil size={12} color="#0A0A0F" />
+              )}
               <input
                 type="file"
                 accept="image/*"
@@ -258,7 +263,15 @@ export default function Profile({ onAssistant }) {
           <div style={{ fontSize: 13, color: T.textDim }}>
             {profile?.address?.city}, {profile?.address?.state}
           </div>
-          {profile?.kycLevel >= 3 && <Badge variant="jade">✅ Verified</Badge>}
+          {profile?.kycLevel >= 3 && (
+            <Badge variant="jade">
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+              >
+                <BadgeCheck size={12} /> Verified
+              </span>
+            </Badge>
+          )}
         </div>
       </div>
 

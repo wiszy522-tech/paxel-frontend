@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 
 export function Button({
@@ -311,11 +312,11 @@ export function Modal({ open, onClose, children, title, width = 480 }) {
                 border: "none",
                 color: T.textDim,
                 cursor: "pointer",
-                fontSize: 20,
-                lineHeight: 1,
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              ✕
+              <X size={20} />
             </button>
           </div>
         )}
@@ -374,10 +375,11 @@ export function Toast({ message, type = "success", onClose }) {
           border: "none",
           color: T.textDim,
           cursor: "pointer",
-          fontSize: 16,
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        ✕
+        <X size={16} />
       </button>
     </div>
   );
@@ -442,7 +444,21 @@ export function EmptyState({ icon, title, body, action }) {
   const { theme: T } = useTheme();
   return (
     <div style={{ textAlign: "center", padding: "48px 24px" }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: T.surfaceAlt,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: T.textMuted,
+          margin: "0 auto 16px",
+        }}
+      >
+        {icon}
+      </div>
       <div
         style={{
           fontFamily: "'Syne', sans-serif",

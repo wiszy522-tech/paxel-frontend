@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Sparkles, X } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { api } from "../utils/api";
 
@@ -140,7 +141,11 @@ function FloatingTrigger({ open, onToggle, pos, setPos }) {
           50% { box-shadow: 0 0 0 12px rgba(242,169,59,0), 0 4px 24px rgba(242,169,59,0.55); }
         }
       `}</style>
-      {open ? "✕" : "✨"}
+      {open ? (
+        <X size={24} color="#0A0A0F" />
+      ) : (
+        <Sparkles size={22} color="#0A0A0F" />
+      )}
     </button>
   );
 }
@@ -249,7 +254,7 @@ export default function AssistantWidget() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>✨</span>
+              <Sparkles size={16} color={T.amber} />
               <span
                 style={{
                   fontFamily: "'Syne', sans-serif",
@@ -267,11 +272,12 @@ export default function AssistantWidget() {
                 background: "none",
                 border: "none",
                 color: T.textDim,
-                fontSize: 18,
                 cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              ✕
+              <X size={18} />
             </button>
           </div>
 

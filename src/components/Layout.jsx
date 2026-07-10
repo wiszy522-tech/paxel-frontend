@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Sun,
+  Moon,
+  History,
+  User,
+  Package,
+  Wallet,
+  Plus,
+  LogOut,
+  Store,
+} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./UI";
 
 const NAV = [
-  { path: "/home", icon: "🏪", label: "Market" },
-  { path: "/trades", icon: "📦", label: "Trades" },
-  { path: "/wallet", icon: "💳", label: "Wallet" },
-  { path: "/profile", icon: "👤", label: "Profile" },
+  { path: "/home", icon: Store, label: "Market" },
+  { path: "/trades", icon: Package, label: "Trades" },
+  { path: "/wallet", icon: Wallet, label: "Wallet" },
+  { path: "/profile", icon: User, label: "Profile" },
 ];
 
 export function ThemeToggle() {
@@ -31,7 +42,7 @@ export function ThemeToggle() {
         transition: "all 0.2s",
       }}
     >
-      {T.name === "dark" ? "☀️" : "🌙"}
+      {T.name === "dark" ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }
@@ -48,31 +59,82 @@ export function LogoPulse() {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        gap: 20,
+        gap: 24,
       }}
     >
       <style>{`
-        @keyframes logoPulse {
-          0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(242,169,59,0.4); }
-          50% { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 0 20px rgba(242,169,59,0); }
+        @keyframes ringExpand {
+          0% { transform: scale(0.6); opacity: 0.55; }
+          70% { opacity: 0.12; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
+        @keyframes logoBreathe {
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(242,169,59,0.35)); }
+          50% { transform: scale(1.14); filter: drop-shadow(0 0 34px rgba(242,169,59,0.85)); }
+        }
+        @keyframes bgGlow {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+        @keyframes wordmarkFade {
+          0%, 100% { opacity: 0.55; letter-spacing: 0px; }
+          50% { opacity: 1; letter-spacing: 1px; }
         }
       `}</style>
-      <img
-        src="/logo.png"
-        alt="PaxeL"
+
+      <div
         style={{
-          width: 88,
-          height: 88,
-          borderRadius: 20,
-          animation: "logoPulse 1.5s ease-in-out infinite",
+          position: "relative",
+          width: 160,
+          height: 160,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
-      />
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(242,169,59,0.28) 0%, transparent 72%)",
+            animation: "bgGlow 2.2s ease-in-out infinite",
+          }}
+        />
+        {[0, 0.5, 1].map((delay) => (
+          <div
+            key={delay}
+            style={{
+              position: "absolute",
+              width: 88,
+              height: 88,
+              borderRadius: 20,
+              border: "1.5px solid rgba(242,169,59,0.55)",
+              animation: `ringExpand 2.2s ease-out infinite`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        ))}
+        <img
+          src="/logo.png"
+          alt="PaxeL"
+          style={{
+            position: "relative",
+            width: 88,
+            height: 88,
+            animation: "logoBreathe 2.2s ease-in-out infinite",
+          }}
+        />
+      </div>
+
       <span
         style={{
           fontFamily: "'Syne', sans-serif",
           fontWeight: 800,
           fontSize: 24,
           color: "#F1EDE3",
+          animation: "wordmarkFade 2.2s ease-in-out infinite",
         }}
       >
         Pax<span style={{ color: "#F2A93B" }}>eL</span>
@@ -148,7 +210,7 @@ export function TopNav() {
           color: T.text,
         }}
       >
-        🕘
+        <History size={17} />
       </button>
 
       <ThemeToggle />
@@ -184,10 +246,10 @@ export function TopNav() {
               </div>
             </div>
             {[
-              { label: "My Profile", path: "/profile", icon: "👤" },
-              { label: "My Trades", path: "/trades", icon: "📦" },
-              { label: "Wallet", path: "/wallet", icon: "💳" },
-              { label: "List a Product", path: "/products/new", icon: "➕" },
+              { label: "My Profile", path: "/profile", icon: User },
+              { label: "My Trades", path: "/trades", icon: Package },
+              { label: "Wallet", path: "/wallet", icon: Wallet },
+              { label: "List a Product", path: "/products/new", icon: Plus },
             ].map((item) => (
               <button
                 key={item.path}
@@ -217,7 +279,7 @@ export function TopNav() {
                   (e.currentTarget.style.background = "none")
                 }
               >
-                <span>{item.icon}</span> {item.label}
+                <item.icon size={16} /> {item.label}
               </button>
             ))}
             <div style={{ height: 1, background: T.border, margin: "4px 0" }} />
@@ -242,7 +304,7 @@ export function TopNav() {
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              🚪 Logout
+              <LogOut size={16} /> Logout
             </button>
           </div>
         )}
@@ -290,7 +352,11 @@ export function BottomNav() {
               padding: "4px 0",
             }}
           >
-            <span style={{ fontSize: 22 }}>{item.icon}</span>
+            <item.icon
+              size={21}
+              strokeWidth={active ? 2.4 : 2}
+              color={active ? T.amber : T.textDim}
+            />
             <span
               style={{
                 fontSize: 10,

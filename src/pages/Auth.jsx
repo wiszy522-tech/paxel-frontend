@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, ShoppingCart, Store, Check } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { ThemeToggle, LogoPulse } from "../components/Layout";
@@ -143,10 +144,11 @@ function Field({
               border: "none",
               cursor: "pointer",
               color: T.textDim,
-              fontSize: 15,
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            {show ? "🙈" : "👁️"}
+            {show ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
         )}
       </div>
@@ -335,8 +337,8 @@ export default function AuthPage() {
                   </label>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[
-                      { v: "buyer", icon: "🛒" },
-                      { v: "seller", icon: "🏪" },
+                      { v: "buyer", Icon: ShoppingCart },
+                      { v: "seller", Icon: Store },
                     ].map((r) => (
                       <button
                         key={r.v}
@@ -353,9 +355,13 @@ export default function AuthPage() {
                           cursor: "pointer",
                           fontWeight: role === r.v ? 600 : 400,
                           fontFamily: "'Inter',sans-serif",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
                         }}
                       >
-                        {r.icon} {r.v}
+                        <r.Icon size={15} /> {r.v}
                       </button>
                     ))}
                   </div>
@@ -406,15 +412,7 @@ export default function AuthPage() {
                     }}
                   >
                     {agreed && (
-                      <span
-                        style={{
-                          color: "#0A0A0F",
-                          fontSize: 11,
-                          fontWeight: 900,
-                        }}
-                      >
-                        ✓
-                      </span>
+                      <Check size={12} strokeWidth={3.5} color="#0A0A0F" />
                     )}
                   </div>
                   <span

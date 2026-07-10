@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { Check, Camera } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
@@ -58,7 +59,7 @@ function StateTimeline({ state }) {
               flexShrink: 0,
             }}
           >
-            {i < idx ? "✓" : i + 1}
+            {i < idx ? <Check size={13} strokeWidth={3} /> : i + 1}
           </div>
           {i < STEPS.length - 1 && (
             <div
@@ -132,7 +133,7 @@ function PhotoCapture({ label, onCaptured }) {
           />
         ) : (
           <div style={{ textAlign: "center", color: T.textDim }}>
-            <div style={{ fontSize: 32, marginBottom: 6 }}>📷</div>
+            <Camera size={30} style={{ marginBottom: 6 }} />
             <div style={{ fontSize: 13 }}>Tap to take a photo</div>
           </div>
         )}
@@ -318,7 +319,7 @@ function ChatPanel({ tradeCode }) {
   );
 }
 
-export default function TradeDetail({ onAssistant }) {
+export default function TradeDetail() {
   const { theme: T } = useTheme();
   const { tradeCode } = useParams();
   const { user } = useAuth();
@@ -408,7 +409,7 @@ export default function TradeDetail({ onAssistant }) {
 
   if (loading) {
     return (
-      <Layout onAssistant={onAssistant}>
+      <Layout>
         <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
           <Spinner size={28} />
         </div>
@@ -417,7 +418,7 @@ export default function TradeDetail({ onAssistant }) {
   }
   if (!trade) {
     return (
-      <Layout onAssistant={onAssistant}>
+      <Layout>
         <div style={{ textAlign: "center", padding: 60, color: T.textDim }}>
           Trade not found.
         </div>
@@ -426,7 +427,7 @@ export default function TradeDetail({ onAssistant }) {
   }
 
   return (
-    <Layout onAssistant={onAssistant}>
+    <Layout>
       {toast && (
         <Toast message={toast} type="error" onClose={() => setToast(null)} />
       )}
@@ -605,6 +606,9 @@ export default function TradeDetail({ onAssistant }) {
       {trade.state === "RELEASED" && (
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
             background: T.jadeBg,
             border: `1px solid ${T.jadeBorder}`,
             borderRadius: 12,
@@ -614,7 +618,8 @@ export default function TradeDetail({ onAssistant }) {
             color: T.jade,
           }}
         >
-          ✓ Funds released. This trade is complete.
+          <Check size={16} strokeWidth={3} /> Funds released. This trade is
+          complete.
         </div>
       )}
 

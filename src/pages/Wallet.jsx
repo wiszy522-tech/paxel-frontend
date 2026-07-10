@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  History,
+  Eye,
+  EyeOff,
+  Banknote,
+  CheckCircle2,
+  AlertTriangle,
+  Lock,
+  Package,
+  Inbox,
+} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
@@ -21,7 +32,7 @@ function activityFromTrade(trade, userId) {
   const isBuyer = trade.buyer?._id === userId || trade.buyer === userId;
   if (trade.state === "RELEASED" && !isBuyer) {
     return {
-      icon: "💰",
+      Icon: Banknote,
       label: `Payment received · ${trade.item}`,
       amount: trade.netAmount,
       positive: true,
@@ -31,7 +42,7 @@ function activityFromTrade(trade, userId) {
   }
   if (trade.state === "RELEASED" && isBuyer) {
     return {
-      icon: "✅",
+      Icon: CheckCircle2,
       label: `Trade completed · ${trade.item}`,
       amount: trade.amount,
       positive: false,
@@ -41,7 +52,7 @@ function activityFromTrade(trade, userId) {
   }
   if (trade.state === "DISPUTED") {
     return {
-      icon: "⚠️",
+      Icon: AlertTriangle,
       label: `Dispute raised · ${trade.item}`,
       amount: trade.amount,
       positive: false,
@@ -51,7 +62,7 @@ function activityFromTrade(trade, userId) {
   }
   if (isBuyer) {
     return {
-      icon: "🔒",
+      Icon: Lock,
       label: `Funds locked · ${trade.item}`,
       amount: trade.amount,
       positive: false,
@@ -60,7 +71,7 @@ function activityFromTrade(trade, userId) {
     };
   }
   return {
-    icon: "📦",
+    Icon: Package,
     label: `New order · ${trade.item}`,
     amount: trade.amount,
     positive: null,
@@ -172,7 +183,7 @@ export default function Wallet() {
             justifyContent: "center",
           }}
         >
-          🕘
+          <History size={17} />
         </button>
       </div>
 
@@ -217,10 +228,13 @@ export default function Wallet() {
                   width: 30,
                   height: 30,
                   cursor: "pointer",
-                  fontSize: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#0A0A0F",
                 }}
               >
-                {hidden ? "🙈" : "👁️"}
+                {hidden ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
             <div
@@ -384,7 +398,7 @@ export default function Wallet() {
 
           {activities.length === 0 ? (
             <EmptyState
-              icon="📭"
+              icon={<Inbox size={24} />}
               title="No activity yet"
               body="Fund your wallet or start a trade to see activity here."
             />
@@ -412,11 +426,11 @@ export default function Wallet() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 16,
+                      color: T[a.tag] || T.textDim,
                       flexShrink: 0,
                     }}
                   >
-                    {a.icon}
+                    <a.Icon size={17} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div

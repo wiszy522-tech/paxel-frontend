@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Package } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
@@ -15,7 +16,7 @@ const STATE_VARIANT = {
   DISPUTED: "rust",
 };
 
-export default function Trades({ onAssistant }) {
+export default function Trades() {
   const { theme: T } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function Trades({ onAssistant }) {
   }, []);
 
   return (
-    <Layout onAssistant={onAssistant}>
+    <Layout>
       <h1
         style={{
           fontFamily: "'Syne', sans-serif",
@@ -48,7 +49,7 @@ export default function Trades({ onAssistant }) {
         </div>
       ) : trades.length === 0 ? (
         <EmptyState
-          icon="📦"
+          icon={<Package size={24} />}
           title="No trades yet"
           body="Trades you create or receive will show up here."
         />

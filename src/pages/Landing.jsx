@@ -1,25 +1,26 @@
 import { useNavigate } from "react-router-dom";
+import { ShieldCheck, Bike, Bus, Sparkles } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeToggle } from "../components/Layout";
 
 const FEATURES = [
   {
-    icon: "🔒",
+    Icon: ShieldCheck,
     title: "Escrow protection",
     body: "Your money sits safely locked until delivery is proven — never released on trust alone.",
   },
   {
-    icon: "🏍️",
+    Icon: Bike,
     title: "Local dispatch",
     body: "Rider delivers to your door. Confirm with a fingerprint tap and funds release instantly.",
   },
   {
-    icon: "🚌",
+    Icon: Bus,
     title: "Interstate waybill",
     body: "Shipping cross-country by bus? We track driver, waybill number, and live photo proof.",
   },
   {
-    icon: "✨",
+    Icon: Sparkles,
     title: "AI trade assistant",
     body: "Ask about any trade, dispute, or how escrow works — get answers in plain English, anytime.",
   },
@@ -134,7 +135,7 @@ export default function Landing() {
               marginBottom: 18,
             }}
           >
-            🔒 Escrow-powered · Built on Nomba
+            <ShieldCheck size={13} /> Escrow-powered · Built on Nomba
           </div>
           <h1
             style={{
@@ -256,7 +257,20 @@ export default function Landing() {
                 padding: 22,
               }}
             >
-              <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
+              <div
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 12,
+                  background: T.amberBg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 14,
+                }}
+              >
+                <f.Icon size={22} color={T.amber} />
+              </div>
               <div
                 style={{
                   fontFamily: "'Syne', sans-serif",

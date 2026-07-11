@@ -1,136 +1,132 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, BadgeCheck, ShoppingBag } from "lucide-react";
+import {
+  LayoutGrid,
+  Wheat,
+  Shirt,
+  Smartphone,
+  Armchair,
+  Flower2,
+  Sprout,
+  Construction,
+  Car,
+  Wrench,
+  Package,
+  Search,
+  CheckCircle,
+} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
-import { Spinner, EmptyState, Input } from "../components/UI";
+import { Badge, Spinner, EmptyState, Button } from "../components/UI";
 import { api } from "../utils/api";
+
+const CATEGORIES = [
+  { value: "", label: "All", Icon: LayoutGrid },
+  { value: "food_and_groceries", label: "Food", Icon: Wheat },
+  { value: "fashion_and_clothing", label: "Fashion", Icon: Shirt },
+  { value: "electronics", label: "Electronics", Icon: Smartphone },
+  { value: "home_and_furniture", label: "Home", Icon: Armchair },
+  { value: "health_and_beauty", label: "Beauty", Icon: Flower2 },
+  { value: "agriculture", label: "Agriculture", Icon: Sprout },
+  { value: "building_materials", label: "Building", Icon: Construction },
+  { value: "vehicles", label: "Vehicles", Icon: Car },
+  { value: "services", label: "Services", Icon: Wrench },
+  { value: "other", label: "Other", Icon: Package },
+];
 
 function ProductCard({ product, onClick }) {
   const { theme: T } = useTheme();
+  const [hovered, setHovered] = useState(false);
+
+  const kycVerified = product.seller?.kycLevel >= 3;
+
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: 18,
+        border: `1px solid ${hovered ? T.amber : T.border}`,
+        borderRadius: 16,
         overflow: "hidden",
         cursor: "pointer",
-        transition: "transform 0.15s, box-shadow 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-3px)";
-        e.currentTarget.style.boxShadow = `0 12px 28px ${T.shadow}`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "none";
-        e.currentTarget.style.boxShadow = "none";
+        transform: hovered ? "translateY(-3px)" : "none",
+        boxShadow: hovered
+          ? `0 12px 32px ${T.shadow}`
+          : `0 2px 8px ${T.shadow}`,
+        transition: "all 0.2s",
       }}
     >
       <div
         style={{
           position: "relative",
-          aspectRatio: "1/1",
-          background: T.surfaceAlt,
+          aspectRatio: "4/3",
+          overflow: "hidden",
+          background: T.bg,
         }}
       >
-        <img
-          src={product.images?.[0]}
-          alt={product.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "40%",
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.35), transparent)",
-          }}
-        />
-        <div style={{ position: "absolute", top: 10, left: 10 }}>
-          <span
+        {product.images?.[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.title}
             style={{
-              background: "rgba(63,166,107,0.92)",
-              color: "#fff",
-              fontSize: 10.5,
-              fontWeight: 700,
-              borderRadius: 999,
-              padding: "4px 9px",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "transform 0.3s",
+            }}
+            onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
+            onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
               display: "flex",
               alignItems: "center",
-              gap: 4,
-              fontFamily: "'Inter', sans-serif",
+              justifyContent: "center",
+              color: T.textMuted,
             }}
           >
-            <ShieldCheck size={11} /> Escrow
-          </span>
-        </div>
-        {product.seller?.primaryTag && (
-          <div style={{ position: "absolute", top: 10, right: 10 }}>
-            <span
-              style={{
-                background:
-                  product.seller?.kycLevel >= 3
-                    ? "rgba(63,166,107,0.92)"
-                    : "rgba(10,10,15,0.55)",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 700,
-                borderRadius: 999,
-                padding: "4px 9px",
-                textTransform: "capitalize",
-                fontFamily: "'Inter', sans-serif",
-                backdropFilter: "blur(4px)",
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-              }}
-            >
-              {product.seller?.kycLevel >= 3 && <BadgeCheck size={12} />}{" "}
-              {product.seller.primaryTag}
-            </span>
+            <Package size={36} />
           </div>
         )}
+        <div style={{ position: "absolute", top: 8, right: 8 }}>
+          <Badge variant={product.condition === "new" ? "jade" : "amber"}>
+            {product.condition}
+          </Badge>
+        </div>
       </div>
-      <div style={{ padding: 13 }}>
+
+      <div style={{ padding: "14px 16px" }}>
         <div
           style={{
-            fontSize: 13.5,
+            fontSize: 15,
             fontWeight: 600,
             color: T.text,
-            marginBottom: 6,
+            marginBottom: 4,
             lineHeight: 1.3,
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            minHeight: 34,
           }}
         >
           {product.title}
         </div>
         <div
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 18,
+            color: T.amber,
             marginBottom: 8,
           }}
         >
-          <span
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 17,
-              fontWeight: 700,
-              color: T.amber,
-            }}
-          >
-            ₦{Number(product.price).toLocaleString()}
-          </span>
+          ₦{product.price?.toLocaleString()}
         </div>
         <div
           style={{
@@ -139,58 +135,31 @@ function ProductCard({ product, onClick }) {
             justifyContent: "space-between",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              minWidth: 0,
-            }}
-          >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div
               style={{
-                width: 18,
-                height: 18,
+                width: 24,
+                height: 24,
                 borderRadius: "50%",
                 background: T.amberBg,
+                border: `1px solid ${T.amberBorder}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 9,
-                fontWeight: 800,
+                fontSize: 10,
                 color: T.amber,
-                flexShrink: 0,
+                fontWeight: 700,
               }}
             >
               {product.seller?.name?.[0]?.toUpperCase() || "?"}
             </div>
-            <span
-              style={{
-                fontSize: 11.5,
-                color: T.textMuted,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {product.seller?.name}
+            <span style={{ fontSize: 12, color: T.textDim }}>
+              {product.seller?.name?.split(" ")[0] || "Seller"}
             </span>
-            {product.seller?.kycLevel >= 3 && (
-              <BadgeCheck size={13} color={T.jade} style={{ flexShrink: 0 }} />
-            )}
+            {kycVerified && <BadgeCheckIcon T={T} />}
           </div>
-          <span
-            style={{
-              fontSize: 10.5,
-              color: T.textDim,
-              fontWeight: 600,
-              flexShrink: 0,
-              background: T.surfaceAlt,
-              borderRadius: 999,
-              padding: "3px 8px",
-            }}
-          >
-            {product.location?.state || "NG"}
+          <span style={{ fontSize: 11, color: T.textMuted }}>
+            {product.location?.state}
           </span>
         </div>
       </div>
@@ -198,97 +167,137 @@ function ProductCard({ product, onClick }) {
   );
 }
 
-export default function Home() {
-  const { theme: T } = useTheme();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [category, setCategory] = useState("");
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+function BadgeCheckIcon({ T }) {
+  return <CheckCircle size={13} color={T.jade} />;
+}
 
-  const loadProducts = useCallback(async (opts = {}) => {
+function SearchBar({ value, onChange }) {
+  const { theme: T } = useTheme();
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div style={{ position: "relative", marginBottom: 20 }}>
+      <Search
+        size={16}
+        style={{
+          position: "absolute",
+          left: 14,
+          top: "50%",
+          transform: "translateY(-50%)",
+          color: T.textMuted,
+          pointerEvents: "none",
+        }}
+      />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search products, categories, locations..."
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: "100%",
+          background: T.surface,
+          color: T.text,
+          border: `1px solid ${focused ? T.amber : T.border}`,
+          borderRadius: 12,
+          padding: "13px 14px 13px 42px",
+          fontSize: 14,
+          outline: "none",
+          fontFamily: "'Inter', sans-serif",
+          boxShadow: focused ? `0 0 0 3px ${T.amberBg}` : "none",
+          transition: "all 0.2s",
+        }}
+      />
+    </div>
+  );
+}
+
+export default function HomePage() {
+  const { theme: T } = useTheme();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
+
+  useEffect(() => {
+    const delay = setTimeout(() => load(1), 400);
+    return () => clearTimeout(delay);
+  }, [search, category]);
+
+  async function load(p = 1) {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(opts.page || 1),
-        ...(opts.category ? { category: opts.category } : {}),
-        ...(opts.search ? { search: opts.search } : {}),
-      });
-      const data = await api(`/products?${params.toString()}`);
-      setProducts(data.products);
-      setPages(data.pagination.pages);
-      setPage(data.pagination.page);
+      const params = new URLSearchParams({ page: p, limit: 12 });
+      if (search) params.append("search", search);
+      if (category) params.append("category", category);
+      const data = await api(`/products?${params}`);
+      setProducts(
+        p === 1 ? data.products : (prev) => [...prev, ...data.products],
+      );
+      setPagination(data.pagination);
+      setPage(p);
     } catch {
-      setProducts([]);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    api("/products/categories")
-      .then((d) => setCategories(d.categories))
-      .catch(() => {});
-    loadProducts({ page: 1 });
-  }, [loadProducts]);
-
-  function handleSearch(e) {
-    e.preventDefault();
-    loadProducts({ page: 1, category, search });
   }
 
   return (
     <Layout>
-      <div style={{ marginBottom: 24 }}>
-        <h1
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+        @media(min-width: 480px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+        @media(min-width: 768px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; } }
+      `}</style>
+
+      <div style={{ marginBottom: 20 }}>
+        <div
           style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: 26,
-            color: T.text,
-            marginBottom: 6,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 4,
           }}
         >
-          Trade with strangers, safely
-        </h1>
-        <p style={{ fontSize: 14, color: T.textDim }}>
-          Every listing here is backed by escrow. Funds only move when delivery
-          is proven.
+          <h1
+            style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(20px, 4vw, 28px)",
+              color: T.text,
+            }}
+          >
+            Good{" "}
+            {new Date().getHours() < 12
+              ? "morning"
+              : new Date().getHours() < 17
+                ? "afternoon"
+                : "evening"}
+            , {user?.name?.split(" ")[0]}
+          </h1>
+          <Button onClick={() => navigate("/products/new")} size="sm">
+            + List item
+          </Button>
+        </div>
+        <p style={{ fontSize: 13, color: T.textDim }}>
+          Discover verified products from sellers across Nigeria
         </p>
       </div>
 
-      <form
-        onSubmit={handleSearch}
-        style={{ display: "flex", gap: 8, marginBottom: 16 }}
-      >
-        <div style={{ flex: 1 }}>
-          <Input
-            value={search}
-            onChange={setSearch}
-            placeholder="Search products..."
-            style={{ marginBottom: 0 }}
-          />
-        </div>
-        <button
-          type="submit"
-          style={{
-            background: T.amber,
-            color: "#0A0A0F",
-            border: "none",
-            borderRadius: 10,
-            padding: "0 20px",
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: "pointer",
-            fontFamily: "'Inter', sans-serif",
-          }}
-        >
-          Search
-        </button>
-      </form>
+      <SearchBar
+        value={search}
+        onChange={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+      />
 
       <div
         style={{
@@ -297,73 +306,66 @@ export default function Home() {
           overflowX: "auto",
           paddingBottom: 4,
           marginBottom: 20,
+          scrollbarWidth: "none",
         }}
       >
-        <button
-          onClick={() => {
-            setCategory("");
-            loadProducts({ page: 1, search });
-          }}
-          style={{
-            flexShrink: 0,
-            border: `1px solid ${!category ? T.amber : T.border}`,
-            background: !category ? T.amberBg : "transparent",
-            color: !category ? T.amber : T.textDim,
-            borderRadius: 999,
-            padding: "6px 14px",
-            fontSize: 13,
-            cursor: "pointer",
-            fontWeight: !category ? 600 : 400,
-            fontFamily: "'Inter', sans-serif",
-          }}
-        >
-          All
-        </button>
-        {categories.map((c) => (
+        {CATEGORIES.map((c) => (
           <button
             key={c.value}
             onClick={() => {
               setCategory(c.value);
-              loadProducts({ page: 1, search, category: c.value });
+              setPage(1);
             }}
             style={{
               flexShrink: 0,
               border: `1px solid ${category === c.value ? T.amber : T.border}`,
-              background: category === c.value ? T.amberBg : "transparent",
+              background: category === c.value ? T.amberBg : T.surface,
               color: category === c.value ? T.amber : T.textDim,
               borderRadius: 999,
-              padding: "6px 14px",
+              padding: "7px 14px",
               fontSize: 13,
               cursor: "pointer",
               fontWeight: category === c.value ? 600 : 400,
               fontFamily: "'Inter', sans-serif",
               whiteSpace: "nowrap",
+              transition: "all 0.15s",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            {c.label}
+            <c.Icon size={14} /> {c.label}
           </button>
         ))}
       </div>
 
-      {loading ? (
+      {loading && products.length === 0 ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
-          <Spinner size={28} />
+          <Spinner size={36} />
         </div>
       ) : products.length === 0 ? (
         <EmptyState
-          icon={<ShoppingBag size={24} />}
-          title="No listings found"
-          body="Try a different search or category, or be the first to list something here."
+          icon={<Search size={24} />}
+          title="No products found"
+          body={
+            search
+              ? `No results for "${search}". Try a different keyword.`
+              : "No products in this category yet."
+          }
+          action={
+            <Button
+              onClick={() => {
+                setSearch("");
+                setCategory("");
+              }}
+            >
+              Clear filters
+            </Button>
+          }
         />
       ) : (
         <>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-              gap: 12,
-            }}
-          >
+          <div className="product-grid">
             {products.map((p) => (
               <ProductCard
                 key={p._id}
@@ -372,34 +374,16 @@ export default function Home() {
               />
             ))}
           </div>
-          {pages > 1 && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 8,
-                marginTop: 24,
-              }}
-            >
-              {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => loadProducts({ page: n, category, search })}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 8,
-                    border: `1px solid ${n === page ? T.amber : T.border}`,
-                    background: n === page ? T.amber : "transparent",
-                    color: n === page ? "#0A0A0F" : T.textDim,
-                    cursor: "pointer",
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
+
+          {pagination && page < pagination.pages && (
+            <div style={{ textAlign: "center", marginTop: 28 }}>
+              <Button
+                variant="secondary"
+                onClick={() => load(page + 1)}
+                loading={loading}
+              >
+                Load more
+              </Button>
             </div>
           )}
         </>

@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import AuthPage from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import KycCallback from "./pages/KycCallback";
 import Home from "./pages/Home";
 import Trades from "./pages/Trades";
 import TradeDetail from "./pages/TradeDetail";
@@ -81,6 +82,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Wallet />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kyc/callback"
+        element={
+          <ProtectedRoute>
+            <KycCallback />
           </ProtectedRoute>
         }
       />

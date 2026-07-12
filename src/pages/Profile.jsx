@@ -315,150 +315,55 @@ function EditProfileModal({ open, onClose, profile, onSave }) {
   );
 }
 
-function KYCModal({ open, onClose, onDone }) {
+function KYCModal({ open, onClose }) {
   const { theme: T } = useTheme();
-  const [nin, setNin] = useState("");
-  const [bvn, setBvn] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const frontRef = useRef();
-  const backRef = useRef();
-  const selfieRef = useRef();
-  const [frontFile, setFrontFile] = useState(null);
-  const [backFile, setBackFile] = useState(null);
-  const [selfieFile, setSelfieFile] = useState(null);
 
-  async function submit(e) {
-    e.preventDefault();
+  async function startVerification() {
     setError("");
     setLoading(true);
     try {
-      const form = new FormData();
-      if (nin) form.append("nin", nin);
-      if (bvn) form.append("bvn", bvn);
-      if (frontFile) form.append("idFront", frontFile);
-      if (backFile) form.append("idBack", backFile);
-      if (selfieFile) form.append("selfie", selfieFile);
-      await apiForm("/profile/kyc", form);
-      onDone();
-      onClose();
+      const data = await api("/kyc/didit/start", { method: "POST" });
+      window.location.href = data.sessionUrl;
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   }
 
-  const FileBtn = ({ label, file, inputRef, capture, onChange }) => (
-    <div style={{ marginBottom: 12 }}>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        capture={capture}
-        style={{ display: "none" }}
-        onChange={(e) => onChange(e.target.files[0])}
-      />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
+  return (
+    <Modal open={open} onClose={onClose} title="Verify your identity">
+      <div
         style={{
-          width: "100%",
-          border: `1px dashed ${file ? T.jade : T.border}`,
-          background: T.bg,
-          color: file ? T.jade : T.textDim,
-          borderRadius: 10,
-          padding: "12px",
-          cursor: "pointer",
           fontSize: 13,
-          fontFamily: "'Inter',sans-serif",
+          color: T.textDim,
+          marginBottom: 20,
+          lineHeight: 1.6,
         }}
       >
-        {file ? `✓ ${file.name}` : label}
-      </button>
-    </div>
-  );
-
-  return (
-    <Modal open={open} onClose={onClose} title="Submit KYC">
-      <form onSubmit={submit}>
+        We use <strong style={{ color: T.amber }}>Didit</strong> to verify your
+        identity. You'll be redirected to a secure page to submit your ID and a
+        selfie, then brought back here automatically once you're done.
+      </div>
+      {error && (
         <div
           style={{
+            background: T.rustBg,
+            border: `1px solid ${T.rustBorder}`,
+            borderRadius: 8,
+            padding: "10px 14px",
+            marginBottom: 12,
             fontSize: 13,
-            color: T.textDim,
-            marginBottom: 16,
-            lineHeight: 1.6,
+            color: T.rust,
           }}
         >
-          Verify your identity to unlock the{" "}
-          <strong style={{ color: T.amber }}>Verified</strong> badge and build
-          trust with buyers/sellers.
+          {error}
         </div>
-        <Input
-          label="NIN (National ID Number)"
-          value={nin}
-          onChange={setNin}
-          placeholder="12345678901"
-          hint="Either NIN or BVN required"
-        />
-        <Input
-          label="BVN (Bank Verification Number)"
-          value={bvn}
-          onChange={setBvn}
-          placeholder="12345678901"
-        />
-        <div
-          style={{
-            fontFamily: "'Syne',sans-serif",
-            fontWeight: 700,
-            fontSize: 13,
-            color: T.text,
-            marginBottom: 10,
-            marginTop: 4,
-          }}
-        >
-          ID Documents
-        </div>
-        <FileBtn
-          label="📷 ID card front"
-          file={frontFile}
-          inputRef={frontRef}
-          capture="environment"
-          onChange={setFrontFile}
-        />
-        <FileBtn
-          label="📷 ID card back"
-          file={backFile}
-          inputRef={backRef}
-          capture="environment"
-          onChange={setBackFile}
-        />
-        <FileBtn
-          label="🤳 Selfie"
-          file={selfieFile}
-          inputRef={selfieRef}
-          capture="user"
-          onChange={setSelfieFile}
-        />
-        {error && (
-          <div
-            style={{
-              background: T.rustBg,
-              border: `1px solid ${T.rustBorder}`,
-              borderRadius: 8,
-              padding: "10px 14px",
-              marginBottom: 12,
-              fontSize: 13,
-              color: T.rust,
-            }}
-          >
-            {error}
-          </div>
-        )}
-        <Button type="submit" fullWidth loading={loading}>
-          Submit KYC
-        </Button>
-      </form>
+      )}
+      <Button fullWidth loading={loading} onClick={startVerification}>
+        🪪 Start verification
+      </Button>
     </Modal>
   );
 }
@@ -756,11 +661,7 @@ export default function ProfilePage({ onAssistant }) {
           updateUser(updated);
         }}
       />
-      <KYCModal
-        open={kycModal}
-        onClose={() => setKycModal(false)}
-        onDone={() => api("/profile").then((d) => setProfile(d.user))}
-      />
+      <KYCModal open={kycModal} onClose={() => setKycModal(false)} />
     </Layout>
   );
 }

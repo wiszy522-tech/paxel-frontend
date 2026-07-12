@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./UI";
+import AssistantWidget from "./AssistantWidget";
 
 const NAV = [
   { path: "/home", icon: "🏪", label: "Market" },
@@ -81,7 +82,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav({ onAssistant }) {
+export function TopNav({ onOpenAssistant }) {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -136,7 +137,7 @@ export function TopNav({ onAssistant }) {
       <div style={{ flex: 1 }} />
 
       <button
-        onClick={onAssistant}
+        onClick={onOpenAssistant}
         style={{
           background: T.amberBg,
           border: `1px solid ${T.amberBorder}`,
@@ -323,14 +324,19 @@ export function BottomNav() {
   );
 }
 
-export function Layout({ children, onAssistant }) {
+export function Layout({ children }) {
+  const [assistantOpen, setAssistantOpen] = useState(false);
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav onAssistant={onAssistant} />
+      <TopNav onOpenAssistant={() => setAssistantOpen(true)} />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>
       <BottomNav />
+      <AssistantWidget
+        open={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
+      />
     </div>
   );
 }

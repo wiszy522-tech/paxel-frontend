@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import AuthPage from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Home from "./pages/Home";
 import Trades from "./pages/Trades";
 import TradeDetail from "./pages/TradeDetail";
@@ -16,6 +17,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/terms" element={<TermsPage />} />
 
       <Route
@@ -60,6 +62,14 @@ export default function App() {
       />
       <Route
         path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:userId"
         element={
           <ProtectedRoute>
             <Profile />

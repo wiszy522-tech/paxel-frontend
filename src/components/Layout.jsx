@@ -82,7 +82,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav({ onOpenAssistant }) {
+export function TopNav() {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -135,27 +135,6 @@ export function TopNav({ onOpenAssistant }) {
       </div>
 
       <div style={{ flex: 1 }} />
-
-      <button
-        onClick={onOpenAssistant}
-        style={{
-          background: T.amberBg,
-          border: `1px solid ${T.amberBorder}`,
-          color: T.amber,
-          borderRadius: 999,
-          padding: "6px 14px",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
-        <span>✨</span>
-        <span className="hide-mobile">AI Assistant</span>
-      </button>
 
       <ThemeToggle />
 
@@ -325,18 +304,14 @@ export function BottomNav() {
 }
 
 export function Layout({ children }) {
-  const [assistantOpen, setAssistantOpen] = useState(false);
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav onOpenAssistant={() => setAssistantOpen(true)} />
+      <TopNav />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>
       <BottomNav />
-      <AssistantWidget
-        open={assistantOpen}
-        onClose={() => setAssistantOpen(false)}
-      />
+      <AssistantWidget />
     </div>
   );
 }

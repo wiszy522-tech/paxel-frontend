@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
+
 const ThemeContext = createContext();
+
 export const DARK = {
   bg: "#0A0A0F",
   bgAlt: "#0F1018",
@@ -24,6 +26,7 @@ export const DARK = {
   overlay: "rgba(0,0,0,0.7)",
   name: "dark",
 };
+
 export const LIGHT = {
   bg: "#F4F1EB",
   bgAlt: "#EDE9E0",
@@ -48,26 +51,31 @@ export const LIGHT = {
   overlay: "rgba(0,0,0,0.5)",
   name: "light",
 };
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem("paxel_theme");
     return saved === "light" ? LIGHT : DARK;
   });
+
   function toggleTheme() {
     const next = theme.name === "dark" ? LIGHT : DARK;
     setTheme(next);
     localStorage.setItem("paxel_theme", next.name);
   }
+
   useEffect(() => {
     document.body.style.background = theme.bg;
     document.body.style.color = theme.text;
   }, [theme]);
+
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
+
 export function useTheme() {
   return useContext(ThemeContext);
 }

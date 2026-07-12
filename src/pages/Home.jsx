@@ -1,45 +1,30 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  LayoutGrid,
-  Wheat,
-  Shirt,
-  Smartphone,
-  Armchair,
-  Flower2,
-  Sprout,
-  Construction,
-  Car,
-  Wrench,
-  Package,
-  Search,
-  CheckCircle,
-} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
-import { Badge, Spinner, EmptyState, Button } from "../components/UI";
+import { Card, Badge, Spinner, EmptyState, Button } from "../components/UI";
 import { api } from "../utils/api";
 
 const CATEGORIES = [
-  { value: "", label: "All", Icon: LayoutGrid },
-  { value: "food_and_groceries", label: "Food", Icon: Wheat },
-  { value: "fashion_and_clothing", label: "Fashion", Icon: Shirt },
-  { value: "electronics", label: "Electronics", Icon: Smartphone },
-  { value: "home_and_furniture", label: "Home", Icon: Armchair },
-  { value: "health_and_beauty", label: "Beauty", Icon: Flower2 },
-  { value: "agriculture", label: "Agriculture", Icon: Sprout },
-  { value: "building_materials", label: "Building", Icon: Construction },
-  { value: "vehicles", label: "Vehicles", Icon: Car },
-  { value: "services", label: "Services", Icon: Wrench },
-  { value: "other", label: "Other", Icon: Package },
+  { value: "", label: "All" },
+  { value: "food_and_groceries", label: "🌾 Food" },
+  { value: "fashion_and_clothing", label: "👗 Fashion" },
+  { value: "electronics", label: "📱 Electronics" },
+  { value: "home_and_furniture", label: "🪑 Home" },
+  { value: "health_and_beauty", label: "💄 Beauty" },
+  { value: "agriculture", label: "🌱 Agriculture" },
+  { value: "building_materials", label: "🧱 Building" },
+  { value: "vehicles", label: "🚗 Vehicles" },
+  { value: "services", label: "🔧 Services" },
+  { value: "other", label: "📦 Other" },
 ];
 
 function ProductCard({ product, onClick }) {
   const { theme: T } = useTheme();
   const [hovered, setHovered] = useState(false);
 
-  const kycVerified = product.seller?.kycLevel >= 3;
+  const kycLabel = product.seller?.kycLevel >= 2 ? "✓ Verified" : null;
 
   return (
     <div
@@ -88,10 +73,10 @@ function ProductCard({ product, onClick }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: T.textMuted,
+              fontSize: 40,
             }}
           >
-            <Package size={36} />
+            📦
           </div>
         )}
         <div style={{ position: "absolute", top: 8, right: 8 }}>
@@ -156,7 +141,7 @@ function ProductCard({ product, onClick }) {
             <span style={{ fontSize: 12, color: T.textDim }}>
               {product.seller?.name?.split(" ")[0] || "Seller"}
             </span>
-            {kycVerified && <BadgeCheckIcon T={T} />}
+            {kycLabel && <span style={{ fontSize: 10, color: T.jade }}>✓</span>}
           </div>
           <span style={{ fontSize: 11, color: T.textMuted }}>
             {product.location?.state}
@@ -167,27 +152,24 @@ function ProductCard({ product, onClick }) {
   );
 }
 
-function BadgeCheckIcon({ T }) {
-  return <CheckCircle size={13} color={T.jade} />;
-}
-
 function SearchBar({ value, onChange }) {
   const { theme: T } = useTheme();
   const [focused, setFocused] = useState(false);
 
   return (
     <div style={{ position: "relative", marginBottom: 20 }}>
-      <Search
-        size={16}
+      <span
         style={{
           position: "absolute",
           left: 14,
           top: "50%",
           transform: "translateY(-50%)",
-          color: T.textMuted,
+          fontSize: 16,
           pointerEvents: "none",
         }}
-      />
+      >
+        🔍
+      </span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -212,7 +194,7 @@ function SearchBar({ value, onChange }) {
   );
 }
 
-export default function HomePage() {
+export default function HomePage({ onAssistant }) {
   const { theme: T } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -248,7 +230,7 @@ export default function HomePage() {
   }
 
   return (
-    <Layout>
+    <Layout onAssistant={onAssistant}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -280,7 +262,7 @@ export default function HomePage() {
               : new Date().getHours() < 17
                 ? "afternoon"
                 : "evening"}
-            , {user?.name?.split(" ")[0]}
+            , {user?.name?.split(" ")[0]} 👋
           </h1>
           <Button onClick={() => navigate("/products/new")} size="sm">
             + List item
@@ -329,12 +311,9 @@ export default function HomePage() {
               fontFamily: "'Inter', sans-serif",
               whiteSpace: "nowrap",
               transition: "all 0.15s",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
             }}
           >
-            <c.Icon size={14} /> {c.label}
+            {c.label}
           </button>
         ))}
       </div>
@@ -345,7 +324,7 @@ export default function HomePage() {
         </div>
       ) : products.length === 0 ? (
         <EmptyState
-          icon={<Search size={24} />}
+          icon="🔍"
           title="No products found"
           body={
             search

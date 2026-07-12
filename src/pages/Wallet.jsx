@@ -1,122 +1,200 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  History,
-  Eye,
-  EyeOff,
-  Banknote,
-  CheckCircle2,
-  AlertTriangle,
-  Lock,
-  Package,
-  Inbox,
-} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
-import {
-  Button,
-  Input,
-  Modal,
-  Toast,
-  Spinner,
-  EmptyState,
-} from "../components/UI";
+import { Button, Card, Modal, Input, Spinner } from "../components/UI";
 import { api } from "../utils/api";
 
-function maskAmount(n) {
-  return "₦" + "•".repeat(String(Math.round(n)).length + 2);
-}
+const BANKS = [
+  { code: "058", name: "GTBank" },
+  { code: "033", name: "UBA" },
+  { code: "044", name: "Access Bank" },
+  { code: "011", name: "First Bank" },
+  { code: "070", name: "Fidelity Bank" },
+  { code: "076", name: "Polaris Bank" },
+  { code: "221", name: "Stanbic IBTC" },
+  { code: "232", name: "Sterling Bank" },
+  { code: "032", name: "Union Bank" },
+  { code: "035", name: "Wema Bank" },
+  { code: "057", name: "Zenith Bank" },
+  { code: "305", name: "Paycom (OPay)" },
+  { code: "50211", name: "Kuda Bank" },
+  { code: "090110", name: "Palmpay" },
+];
 
-function activityFromTrade(trade, userId) {
-  const isBuyer = trade.buyer?._id === userId || trade.buyer === userId;
-  if (trade.state === "RELEASED" && !isBuyer) {
-    return {
-      Icon: Banknote,
-      label: `Payment received · ${trade.item}`,
-      amount: trade.netAmount,
-      positive: true,
-      date: trade.updatedAt,
-      tag: "jade",
-    };
-  }
-  if (trade.state === "RELEASED" && isBuyer) {
-    return {
-      Icon: CheckCircle2,
-      label: `Trade completed · ${trade.item}`,
-      amount: trade.amount,
-      positive: false,
-      date: trade.updatedAt,
-      tag: "jade",
-    };
-  }
-  if (trade.state === "DISPUTED") {
-    return {
-      Icon: AlertTriangle,
-      label: `Dispute raised · ${trade.item}`,
-      amount: trade.amount,
-      positive: false,
-      date: trade.updatedAt,
-      tag: "rust",
-    };
-  }
-  if (isBuyer) {
-    return {
-      Icon: Lock,
-      label: `Funds locked · ${trade.item}`,
-      amount: trade.amount,
-      positive: false,
-      date: trade.createdAt,
-      tag: "amber",
-    };
-  }
-  return {
-    Icon: Package,
-    label: `New order · ${trade.item}`,
-    amount: trade.amount,
-    positive: null,
-    date: trade.createdAt,
-    tag: "amber",
-  };
-}
-
-export default function Wallet() {
+function StatCard({ label, value, sub, accent }) {
   const { theme: T } = useTheme();
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [balance, setBalance] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hidden, setHidden] = useState(false);
-  const [fundModal, setFundModal] = useState(false);
-  const [withdrawModal, setWithdrawModal] = useState(false);
+  return (
+    <div
+      style={{
+        background: T.surface,
+        border: `1px solid ${T.border}`,
+        borderRadius: 14,
+        padding: "18px 20px",
+        flex: 1,
+        minWidth: 140,
+      }}
+    >
+      <div style={{ fontSize: 12, color: T.textDim, marginBottom: 6 }}>
+        {label}
+      </div>
+      <div
+        style={{
+          fontFamily: "'Syne',sans-serif",
+          fontWeight: 800,
+          fontSize: "clamp(20px,4vw,26px)",
+          color: accent || T.text,
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FundModal({ open, onClose, user }) {
+  const { theme: T } = useTheme();
+  const [copied, setCopied] = useState(false);
+
+  function copy(text) {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Fund your wallet">
+      <div
+        style={{
+          background: T.amberBg,
+          border: `1px solid ${T.amberBorder}`,
+          borderRadius: 12,
+          padding: "16px",
+          marginBottom: 16,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 12,
+            color: T.amber,
+            fontFamily: "'IBM Plex Mono',monospace",
+            marginBottom: 8,
+          }}
+        >
+          YOUR PAXEL WALLET ACCOUNT
+        </div>
+        <div
+          style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 800,
+            fontSize: 28,
+            color: T.text,
+            marginBottom: 4,
+          }}
+        >
+          {user?.virtualAccountNumber || "—"}
+        </div>
+        <div style={{ fontSize: 14, color: T.textDim, marginBottom: 12 }}>
+          Nombank MFB · {user?.name}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => copy(user?.virtualAccountNumber)}
+        >
+          {copied ? "✓ Copied!" : "Copy account number"}
+        </Button>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          color: T.textDim,
+          lineHeight: 1.7,
+          marginBottom: 16,
+        }}
+      >
+        Transfer any amount to this account from your bank app. Funds settle
+        instantly and appear in your PaxeL wallet.
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {[
+          { icon: "🏦", text: "Open your banking app" },
+          { icon: "📱", text: "Select Transfer → Other Banks" },
+          { icon: "🔍", text: "Search Nombank MFB" },
+          { icon: "🔢", text: `Enter account: ${user?.virtualAccountNumber}` },
+          { icon: "💸", text: "Enter amount and confirm" },
+        ].map((s, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontSize: 13,
+              color: T.text,
+            }}
+          >
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+            <span>{s.text}</span>
+          </div>
+        ))}
+      </div>
+    </Modal>
+  );
+}
+
+function WithdrawModal({ open, onClose, maxAmount, onSuccess }) {
+  const { theme: T } = useTheme();
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
   const [amount, setAmount] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [looking, setLooking] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function load() {
-    setLoading(true);
-    Promise.all([api("/wallet/balance"), api("/trades/my")])
-      .then(([b, t]) => {
-        setBalance(b.user);
-        const sorted = [...t.trades]
-          .sort((a, b2) => new Date(b2.updatedAt) - new Date(a.updatedAt))
-          .slice(0, 8);
-        setActivities(sorted.map((tr) => activityFromTrade(tr, user?.id)));
-      })
-      .finally(() => setLoading(false));
+  async function lookup() {
+    if (!bankCode || accountNumber.length < 10) return;
+    setLooking(true);
+    setAccountName("");
+    try {
+      const data = await api("/profile/bank", {
+        method: "POST",
+        body: JSON.stringify({ bankCode, accountNumber }),
+      });
+      setAccountName(data.bank?.accountName || "");
+    } catch {
+      setAccountName("");
+    } finally {
+      setLooking(false);
+    }
   }
 
   useEffect(() => {
-    load();
-  }, []);
+    if (accountNumber.length === 10 && bankCode) lookup();
+  }, [accountNumber, bankCode]);
 
-  async function handleWithdraw() {
-    setSubmitting(true);
+  async function submit(e) {
+    e.preventDefault();
+    if (!accountName) {
+      setError("Please verify your bank account first");
+      return;
+    }
+    if (Number(amount) > maxAmount) {
+      setError(`Max withdrawal is ₦${maxAmount.toLocaleString()}`);
+      return;
+    }
+    setError("");
+    setLoading(true);
     try {
-      const data = await api("/wallet/withdraw", {
+      await api("/wallet/withdraw", {
         method: "POST",
         body: JSON.stringify({
           bankCode,
@@ -124,444 +202,399 @@ export default function Wallet() {
           amount: Number(amount),
         }),
       });
-      setToast(`₦${amount} sent to ${data.recipient}`);
-      setWithdrawModal(false);
-      setBankCode("");
-      setAccountNumber("");
-      setAmount("");
-      load();
+      onSuccess();
+      onClose();
     } catch (err) {
-      setToast(err.message);
+      setError(err.message);
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   }
 
-  const first = user?.name?.split(" ")[0] || "there";
+  const SelectStyle = {
+    width: "100%",
+    background: T.bg,
+    color: T.text,
+    border: `1px solid ${T.border}`,
+    borderRadius: 10,
+    padding: "12px 14px",
+    fontSize: 14,
+    outline: "none",
+    fontFamily: "'Inter',sans-serif",
+    marginBottom: 14,
+  };
 
   return (
-    <Layout>
-      {toast && (
-        <Toast
-          message={toast}
-          type={toast.startsWith("₦") ? "success" : "error"}
-          onClose={() => setToast(null)}
-        />
-      )}
+    <Modal open={open} onClose={onClose} title="Withdraw to bank">
+      <form onSubmit={submit}>
+        <label
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: T.textDim,
+            display: "block",
+            marginBottom: 5,
+          }}
+        >
+          Select bank
+        </label>
+        <select
+          value={bankCode}
+          onChange={(e) => setBankCode(e.target.value)}
+          style={SelectStyle}
+          required
+        >
+          <option value="">Select your bank</option>
+          {BANKS.map((b) => (
+            <option key={b.code} value={b.code}>
+              {b.name}
+            </option>
+          ))}
+        </select>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
+        <Input
+          label="Account number"
+          value={accountNumber}
+          onChange={setAccountNumber}
+          placeholder="0123456789"
+          rightElement={
+            looking ? (
+              <Spinner size={14} />
+            ) : accountName ? (
+              <span style={{ fontSize: 16 }}>✓</span>
+            ) : null
+          }
+        />
+
+        {accountName && (
+          <div
+            style={{
+              background: T.jadeBg,
+              border: `1px solid ${T.jadeBorder}`,
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 14,
+              fontSize: 13,
+              color: T.jade,
+            }}
+          >
+            ✓ {accountName}
+          </div>
+        )}
+
+        <Input
+          label={`Amount (₦) — max ₦${maxAmount?.toLocaleString()}`}
+          type="number"
+          value={amount}
+          onChange={setAmount}
+          placeholder="5000"
+        />
+
+        {error && (
+          <div
+            style={{
+              background: T.rustBg,
+              border: `1px solid ${T.rustBorder}`,
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 12,
+              fontSize: 13,
+              color: T.rust,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          fullWidth
+          loading={loading}
+          disabled={!accountName}
+        >
+          Withdraw ₦{Number(amount || 0).toLocaleString()}
+        </Button>
+      </form>
+    </Modal>
+  );
+}
+
+export default function WalletPage({ onAssistant }) {
+  const { theme: T } = useTheme();
+  const { user, updateUser } = useAuth();
+  const [balance, setBalance] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [fundModal, setFundModal] = useState(false);
+  const [withdrawModal, setWithdrawModal] = useState(false);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    api("/wallet/balance")
+      .then((d) => {
+        setBalance(d.user);
+        updateUser({
+          walletBalance: d.user.walletBalance,
+          lockedBalance: d.user.lockedBalance,
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Layout onAssistant={onAssistant}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        select{color-scheme:${T.name}}
+      `}</style>
+
+      <div style={{ marginBottom: 24 }}>
         <h1
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'Syne',sans-serif",
             fontWeight: 800,
-            fontSize: 22,
+            fontSize: "clamp(20px,4vw,28px)",
             color: T.text,
+            marginBottom: 4,
           }}
         >
-          Hi, {first}
+          Wallet
         </h1>
-        <button
-          onClick={() => navigate("/trades")}
-          title="Trade history"
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: "50%",
-            border: `1px solid ${T.border}`,
-            background: T.surface,
-            cursor: "pointer",
-            fontSize: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <History size={17} />
-        </button>
+        <p style={{ fontSize: 13, color: T.textDim }}>
+          Fund, manage, and withdraw your PaxeL balance
+        </p>
       </div>
 
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
-          <Spinner size={28} />
+          <Spinner size={36} />
         </div>
       ) : (
         <>
           <div
             style={{
-              background: `linear-gradient(135deg, ${T.amberDim}, ${T.amber})`,
-              borderRadius: 22,
-              padding: "22px 20px",
-              marginBottom: 14,
-              boxShadow: "0 12px 32px rgba(242,169,59,.28)",
+              background: `linear-gradient(135deg, #1C1F2B 0%, #242838 100%)`,
+              border: `1px solid ${T.border}`,
+              borderRadius: 20,
+              padding: "28px 24px",
+              marginBottom: 20,
+              position: "relative",
+              overflow: "hidden",
             }}
           >
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 4,
+                position: "absolute",
+                top: -20,
+                right: -20,
+                width: 120,
+                height: 120,
+                borderRadius: "50%",
+                background: "rgba(242,169,59,0.06)",
               }}
-            >
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "rgba(10,10,15,0.75)",
-                  fontWeight: 600,
-                }}
-              >
-                Total balance
-              </span>
-              <button
-                onClick={() => setHidden((h) => !h)}
-                style={{
-                  background: "rgba(10,10,15,0.12)",
-                  border: "none",
-                  borderRadius: 999,
-                  width: 30,
-                  height: 30,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#0A0A0F",
-                }}
-              >
-                {hidden ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
+            />
             <div
               style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: 30,
-                fontWeight: 800,
-                color: "#0A0A0F",
-                marginBottom: 18,
+                position: "absolute",
+                bottom: -30,
+                left: -10,
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "rgba(242,169,59,0.04)",
               }}
+            />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "#9CA0AE",
+                  fontFamily: "'IBM Plex Mono',monospace",
+                  marginBottom: 6,
+                }}
+              >
+                AVAILABLE BALANCE
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: "clamp(32px,6vw,48px)",
+                  color: "#F1EDE3",
+                  marginBottom: 4,
+                }}
+              >
+                ₦{(balance?.walletBalance || 0).toLocaleString()}
+              </div>
+              {balance?.lockedBalance > 0 && (
+                <div style={{ fontSize: 13, color: "#F2A93B" }}>
+                  + ₦{balance.lockedBalance.toLocaleString()} locked in escrow
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "#9CA0AE",
+                  marginTop: 8,
+                  fontFamily: "'IBM Plex Mono',monospace",
+                }}
+              >
+                Acct: {user?.virtualAccountNumber} · Nombank MFB
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+            <Button
+              fullWidth
+              onClick={() => setFundModal(true)}
+              variant="ghost"
             >
-              {hidden
-                ? maskAmount(
-                    (balance?.walletBalance || 0) +
-                      (balance?.lockedBalance || 0),
-                  )
-                : `₦${Number((balance?.walletBalance || 0) + (balance?.lockedBalance || 0)).toLocaleString()}`}
-            </div>
-
-            <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
-              <div
-                style={{
-                  flex: 1,
-                  background: "rgba(10,10,15,0.12)",
-                  borderRadius: 14,
-                  padding: "10px 12px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(10,10,15,0.7)",
-                    marginBottom: 3,
-                  }}
-                >
-                  Usable
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: "#0A0A0F",
-                  }}
-                >
-                  {hidden
-                    ? maskAmount(balance?.walletBalance || 0)
-                    : `₦${Number(balance?.walletBalance || 0).toLocaleString()}`}
-                </div>
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  background: "rgba(10,10,15,0.12)",
-                  borderRadius: 14,
-                  padding: "10px 12px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(10,10,15,0.7)",
-                    marginBottom: 3,
-                  }}
-                >
-                  In escrow
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: "#0A0A0F",
-                  }}
-                >
-                  {hidden
-                    ? maskAmount(balance?.lockedBalance || 0)
-                    : `₦${Number(balance?.lockedBalance || 0).toLocaleString()}`}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => setFundModal(true)}
-                style={{
-                  flex: 1,
-                  background: "#0A0A0F",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "11px 0",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                + Fund
-              </button>
-              <button
-                onClick={() => setWithdrawModal(true)}
-                style={{
-                  flex: 1,
-                  background: "rgba(10,10,15,0.14)",
-                  color: "#0A0A0F",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "11px 0",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                Withdraw
-              </button>
-              <button
-                onClick={() => navigate("/trades")}
-                style={{
-                  flex: 1,
-                  background: "rgba(10,10,15,0.14)",
-                  color: "#0A0A0F",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "11px 0",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  cursor: "pointer",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-              >
-                History
-              </button>
-            </div>
+              💳 Fund wallet
+            </Button>
+            <Button
+              fullWidth
+              onClick={() => setWithdrawModal(true)}
+              disabled={!balance?.walletBalance}
+            >
+              🏦 Withdraw
+            </Button>
           </div>
 
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
+              gap: 10,
+              marginBottom: 24,
+              flexWrap: "wrap",
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
-              Recent activity
-            </div>
-            <span
-              onClick={() => navigate("/trades")}
-              style={{
-                fontSize: 12.5,
-                color: T.amber,
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
-              See all
-            </span>
+            <StatCard
+              label="Available"
+              value={`₦${(balance?.walletBalance || 0).toLocaleString()}`}
+              accent={T.jade}
+            />
+            <StatCard
+              label="In Escrow"
+              value={`₦${(balance?.lockedBalance || 0).toLocaleString()}`}
+              accent={T.amber}
+            />
           </div>
 
-          {activities.length === 0 ? (
-            <EmptyState
-              icon={<Inbox size={24} />}
-              title="No activity yet"
-              body="Fund your wallet or start a trade to see activity here."
-            />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {activities.map((a, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 14,
-                    padding: "12px 14px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: "50%",
-                      background: T[`${a.tag}Bg`],
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: T[a.tag] || T.textDim,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <a.Icon size={17} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13.5,
-                        fontWeight: 600,
-                        color: T.text,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {a.label}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: T.textMuted }}>
-                      {new Date(a.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: 13.5,
-                      fontWeight: 700,
-                      color:
-                        a.positive === true
-                          ? T.jade
-                          : a.positive === false
-                            ? T.rust
-                            : T.textDim,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {a.positive === true
-                      ? "+"
-                      : a.positive === false
-                        ? "-"
-                        : ""}
-                    ₦{Number(a.amount).toLocaleString()}
-                  </div>
-                </div>
-              ))}
+          <Card>
+            <div
+              style={{
+                fontFamily: "'Syne',sans-serif",
+                fontWeight: 700,
+                fontSize: 15,
+                color: T.text,
+                marginBottom: 12,
+              }}
+            >
+              How your wallet works
             </div>
-          )}
+            {[
+              {
+                icon: "💳",
+                title: "Fund",
+                body: "Transfer to your Nombank MFB account number. Settles instantly.",
+              },
+              {
+                icon: "🔒",
+                title: "Escrow",
+                body: "When you place a trade, funds move from wallet to escrow. Safe until delivery.",
+              },
+              {
+                icon: "✅",
+                title: "Release",
+                body: "Confirm receipt → seller's wallet is credited. Your locked balance frees.",
+              },
+              {
+                icon: "🏦",
+                title: "Withdraw",
+                body: "Send from your wallet to any Nigerian bank account anytime.",
+              },
+            ].map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginBottom: i < 3 ? 14 : 0,
+                  paddingBottom: i < 3 ? 14 : 0,
+                  borderBottom: i < 3 ? `1px solid ${T.border}` : "none",
+                }}
+              >
+                <span style={{ fontSize: 22, flexShrink: 0 }}>{s.icon}</span>
+                <div>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: T.text,
+                      fontSize: 14,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {s.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: T.textDim }}>{s.body}</div>
+                </div>
+              </div>
+            ))}
+          </Card>
         </>
       )}
 
-      <Modal
+      <FundModal
         open={fundModal}
         onClose={() => setFundModal(false)}
-        title="Fund your wallet"
-      >
-        <p
-          style={{
-            fontSize: 13,
-            color: T.textDim,
-            marginBottom: 16,
-            lineHeight: 1.6,
-          }}
-        >
-          Transfer any amount to your dedicated PaxeL virtual account below.
-          Your wallet is credited automatically within seconds.
-        </p>
-        <div
-          style={{
-            background: T.surfaceAlt,
-            border: `1px solid ${T.border}`,
-            borderRadius: 12,
-            padding: 16,
-          }}
-        >
-          <div style={{ fontSize: 12, color: T.textDim, marginBottom: 4 }}>
-            Bank
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: T.text,
-              marginBottom: 12,
-            }}
-          >
-            Nombank MFB
-          </div>
-          <div style={{ fontSize: 12, color: T.textDim, marginBottom: 4 }}>
-            Account number
-          </div>
-          <div
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 20,
-              fontWeight: 700,
-              color: T.amber,
-            }}
-          >
-            {user?.virtualAccountNumber || "—"}
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
+        user={user}
+      />
+      <WithdrawModal
         open={withdrawModal}
         onClose={() => setWithdrawModal(false)}
-        title="Withdraw funds"
-      >
-        <Input
-          label="Bank code"
-          value={bankCode}
-          onChange={setBankCode}
-          placeholder="e.g. 044"
-          required
-        />
-        <Input
-          label="Account number"
-          value={accountNumber}
-          onChange={setAccountNumber}
-          required
-        />
-        <Input
-          label="Amount (₦)"
-          type="number"
-          value={amount}
-          onChange={setAmount}
-          required
-        />
-        <Button fullWidth loading={submitting} onClick={handleWithdraw}>
-          Withdraw
-        </Button>
-      </Modal>
+        maxAmount={balance?.walletBalance || 0}
+        onSuccess={() => {
+          setToast("Withdrawal initiated successfully!");
+          api("/wallet/balance").then((d) => {
+            setBalance(d.user);
+            updateUser(d.user);
+          });
+        }}
+      />
+
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 80,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: T.surface,
+            border: `1px solid ${T.jade}`,
+            borderRadius: 12,
+            padding: "12px 20px",
+            fontSize: 14,
+            color: T.jade,
+            zIndex: 900,
+          }}
+        >
+          ✓ {toast}
+          <button
+            onClick={() => setToast("")}
+            style={{
+              marginLeft: 12,
+              background: "none",
+              border: "none",
+              color: T.textDim,
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </Layout>
   );
 }

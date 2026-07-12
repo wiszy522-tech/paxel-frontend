@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ShoppingCart, Store, Check } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { ThemeToggle, LogoPulse } from "../components/Layout";
@@ -144,11 +143,10 @@ function Field({
               border: "none",
               cursor: "pointer",
               color: T.textDim,
-              display: "flex",
-              alignItems: "center",
+              fontSize: 15,
             }}
           >
-            {show ? <EyeOff size={17} /> : <Eye size={17} />}
+            {show ? "🙈" : "👁️"}
           </button>
         )}
       </div>
@@ -234,13 +232,14 @@ export default function AuthPage() {
       >
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <img
-            src="/logo.png"
+            src="/logo.jpg"
             alt="PaxeL"
             style={{
-              width: 84,
-              height: 84,
-              marginBottom: 6,
-              filter: "drop-shadow(0 8px 24px rgba(242,169,59,.35))",
+              width: 68,
+              height: 68,
+              borderRadius: 16,
+              marginBottom: 10,
+              boxShadow: "0 8px 32px rgba(242,169,59,.3)",
             }}
           />
           <div
@@ -337,8 +336,8 @@ export default function AuthPage() {
                   </label>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[
-                      { v: "buyer", Icon: ShoppingCart },
-                      { v: "seller", Icon: Store },
+                      { v: "buyer", icon: "🛒" },
+                      { v: "seller", icon: "🏪" },
                     ].map((r) => (
                       <button
                         key={r.v}
@@ -355,13 +354,9 @@ export default function AuthPage() {
                           cursor: "pointer",
                           fontWeight: role === r.v ? 600 : 400,
                           fontFamily: "'Inter',sans-serif",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
                         }}
                       >
-                        <r.Icon size={15} /> {r.v}
+                        {r.icon} {r.v}
                       </button>
                     ))}
                   </div>
@@ -412,7 +407,15 @@ export default function AuthPage() {
                     }}
                   >
                     {agreed && (
-                      <Check size={12} strokeWidth={3.5} color="#0A0A0F" />
+                      <span
+                        style={{
+                          color: "#0A0A0F",
+                          fontSize: 11,
+                          fontWeight: 900,
+                        }}
+                      >
+                        ✓
+                      </span>
                     )}
                   </div>
                   <span

@@ -1,25 +1,14 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Sun,
-  Moon,
-  History,
-  User,
-  Package,
-  Wallet,
-  Plus,
-  LogOut,
-  Store,
-} from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./UI";
 
 const NAV = [
-  { path: "/home", icon: Store, label: "Market" },
-  { path: "/trades", icon: Package, label: "Trades" },
-  { path: "/wallet", icon: Wallet, label: "Wallet" },
-  { path: "/profile", icon: User, label: "Profile" },
+  { path: "/home", icon: "🏪", label: "Market" },
+  { path: "/trades", icon: "📦", label: "Trades" },
+  { path: "/wallet", icon: "💳", label: "Wallet" },
+  { path: "/profile", icon: "👤", label: "Profile" },
 ];
 
 export function ThemeToggle() {
@@ -42,7 +31,7 @@ export function ThemeToggle() {
         transition: "all 0.2s",
       }}
     >
-      {T.name === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      {T.name === "dark" ? "☀️" : "🌙"}
     </button>
   );
 }
@@ -59,82 +48,31 @@ export function LogoPulse() {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        gap: 24,
+        gap: 20,
       }}
     >
       <style>{`
-        @keyframes ringExpand {
-          0% { transform: scale(0.6); opacity: 0.55; }
-          70% { opacity: 0.12; }
-          100% { transform: scale(2.4); opacity: 0; }
-        }
-        @keyframes logoBreathe {
-          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(242,169,59,0.35)); }
-          50% { transform: scale(1.14); filter: drop-shadow(0 0 34px rgba(242,169,59,0.85)); }
-        }
-        @keyframes bgGlow {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
-        }
-        @keyframes wordmarkFade {
-          0%, 100% { opacity: 0.55; letter-spacing: 0px; }
-          50% { opacity: 1; letter-spacing: 1px; }
+        @keyframes logoPulse {
+          0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(242,169,59,0.4); }
+          50% { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 0 20px rgba(242,169,59,0); }
         }
       `}</style>
-
-      <div
+      <img
+        src="/logo.png"
+        alt="PaxeL"
         style={{
-          position: "relative",
-          width: 160,
-          height: 160,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: 88,
+          height: 88,
+          borderRadius: 20,
+          animation: "logoPulse 1.5s ease-in-out infinite",
         }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(242,169,59,0.28) 0%, transparent 72%)",
-            animation: "bgGlow 2.2s ease-in-out infinite",
-          }}
-        />
-        {[0, 0.5, 1].map((delay) => (
-          <div
-            key={delay}
-            style={{
-              position: "absolute",
-              width: 88,
-              height: 88,
-              borderRadius: 20,
-              border: "1.5px solid rgba(242,169,59,0.55)",
-              animation: `ringExpand 2.2s ease-out infinite`,
-              animationDelay: `${delay}s`,
-            }}
-          />
-        ))}
-        <img
-          src="/logo.png"
-          alt="PaxeL"
-          style={{
-            position: "relative",
-            width: 88,
-            height: 88,
-            animation: "logoBreathe 2.2s ease-in-out infinite",
-          }}
-        />
-      </div>
-
+      />
       <span
         style={{
           fontFamily: "'Syne', sans-serif",
           fontWeight: 800,
           fontSize: 24,
           color: "#F1EDE3",
-          animation: "wordmarkFade 2.2s ease-in-out infinite",
         }}
       >
         Pax<span style={{ color: "#F2A93B" }}>eL</span>
@@ -143,7 +81,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav() {
+export function TopNav({ onAssistant }) {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -178,7 +116,11 @@ export function TopNav() {
           flexShrink: 0,
         }}
       >
-        <img src="/logo.png" alt="PaxeL" style={{ height: 32 }} />
+        <img
+          src="/logo.png"
+          alt="PaxeL"
+          style={{ height: 30, borderRadius: 6 }}
+        />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",
@@ -194,23 +136,24 @@ export function TopNav() {
       <div style={{ flex: 1 }} />
 
       <button
-        onClick={() => navigate("/trades")}
-        title="Trade & transaction history"
+        onClick={onAssistant}
         style={{
-          background: T.surface,
-          border: `1px solid ${T.border}`,
-          borderRadius: "50%",
-          width: 36,
-          height: 36,
+          background: T.amberBg,
+          border: `1px solid ${T.amberBorder}`,
+          color: T.amber,
+          borderRadius: 999,
+          padding: "6px 14px",
+          fontSize: 13,
+          fontWeight: 600,
           cursor: "pointer",
-          fontSize: 16,
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          color: T.text,
+          gap: 6,
+          fontFamily: "'Inter', sans-serif",
         }}
       >
-        <History size={17} />
+        <span>✨</span>
+        <span className="hide-mobile">AI Assistant</span>
       </button>
 
       <ThemeToggle />
@@ -246,10 +189,10 @@ export function TopNav() {
               </div>
             </div>
             {[
-              { label: "My Profile", path: "/profile", icon: User },
-              { label: "My Trades", path: "/trades", icon: Package },
-              { label: "Wallet", path: "/wallet", icon: Wallet },
-              { label: "List a Product", path: "/products/new", icon: Plus },
+              { label: "My Profile", path: "/profile", icon: "👤" },
+              { label: "My Trades", path: "/trades", icon: "📦" },
+              { label: "Wallet", path: "/wallet", icon: "💳" },
+              { label: "List a Product", path: "/products/new", icon: "➕" },
             ].map((item) => (
               <button
                 key={item.path}
@@ -279,14 +222,14 @@ export function TopNav() {
                   (e.currentTarget.style.background = "none")
                 }
               >
-                <item.icon size={16} /> {item.label}
+                <span>{item.icon}</span> {item.label}
               </button>
             ))}
             <div style={{ height: 1, background: T.border, margin: "4px 0" }} />
             <button
               onClick={() => {
                 logout();
-                navigate("/auth");
+                navigate("/");
               }}
               style={{
                 width: "100%",
@@ -304,7 +247,7 @@ export function TopNav() {
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              <LogOut size={16} /> Logout
+              🚪 Logout
             </button>
           </div>
         )}
@@ -352,11 +295,7 @@ export function BottomNav() {
               padding: "4px 0",
             }}
           >
-            <item.icon
-              size={21}
-              strokeWidth={active ? 2.4 : 2}
-              color={active ? T.amber : T.textDim}
-            />
+            <span style={{ fontSize: 22 }}>{item.icon}</span>
             <span
               style={{
                 fontSize: 10,
@@ -384,10 +323,10 @@ export function BottomNav() {
   );
 }
 
-export function Layout({ children }) {
+export function Layout({ children, onAssistant }) {
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav />
+      <TopNav onAssistant={onAssistant} />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>

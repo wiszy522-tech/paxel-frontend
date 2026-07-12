@@ -1,391 +1,766 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Pencil, BadgeCheck } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
 import {
+  Button,
   Card,
   Badge,
-  Button,
-  Input,
-  Avatar,
   Spinner,
-  Toast,
-  Divider,
+  Avatar,
+  Modal,
+  Input,
 } from "../components/UI";
 import { api, apiForm } from "../utils/api";
 
-const KYC_LABELS = {
-  0: "Not started",
-  1: "Profile complete",
-  2: "BVN/NIN submitted",
-  3: "Fully verified",
-};
+const STATES = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "FCT",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+];
 
-function KycCard() {
+const KYC_LEVELS = [
+  {
+    level: 0,
+    label: "Unverified",
+    desc: "Email registered",
+    icon: "📧",
+    color: null,
+  },
+  {
+    level: 1,
+    label: "Profile Complete",
+    desc: "Name, phone & address added",
+    icon: "👤",
+    color: "#F2A93B",
+  },
+  {
+    level: 2,
+    label: "ID Submitted",
+    desc: "BVN or NIN provided",
+    icon: "🪪",
+    color: "#F2A93B",
+  },
+  {
+    level: 3,
+    label: "Fully Verified",
+    desc: "ID + selfie confirmed",
+    icon: "✅",
+    color: "#3FA66B",
+  },
+];
+
+function KYCProgress({ level }) {
   const { theme: T } = useTheme();
-  const [status, setStatus] = useState(null);
-  const [startingKyc, setStartingKyc] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  function load() {
-    api("/kyc/status")
-      .then(setStatus)
-      .catch(() => {});
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function startDidit() {
-    setStartingKyc(true);
-    try {
-      const data = await api("/kyc/didit/start", { method: "POST" });
-      window.location.href = data.sessionUrl;
-    } catch (err) {
-      setToast(err.message);
-      setStartingKyc(false);
-    }
-  }
-
-  if (!status) return null;
-
   return (
-    <Card style={{ marginBottom: 16 }}>
-      {toast && (
-        <Toast message={toast} type="error" onClose={() => setToast(null)} />
-      )}
+    <div style={{ marginBottom: 20 }}>
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          fontFamily: "'Syne',sans-serif",
+          fontWeight: 700,
+          fontSize: 15,
+          color: T.text,
           marginBottom: 12,
         }}
       >
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
-          Identity verification
-        </div>
-        <Badge variant={status.kycLevel >= 3 ? "jade" : "amber"}>
-          Level {status.kycLevel}/3
-        </Badge>
+        Verification Level
       </div>
-      <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
         {[1, 2, 3].map((l) => (
           <div
             key={l}
             style={{
               flex: 1,
               height: 4,
-              borderRadius: 2,
-              background: status.kycLevel >= l ? T.amber : T.border,
+              borderRadius: 99,
+              background: l <= level ? T.amber : T.border,
+              transition: "background 0.3s",
             }}
           />
         ))}
       </div>
-      <p style={{ fontSize: 13, color: T.textDim, marginBottom: 14 }}>
-        {status.nextStep}
-      </p>
-      {status.kycLevel < 3 && status.kycLevel >= 2 && (
-        <Button fullWidth loading={startingKyc} onClick={startDidit}>
-          {status.diditStatus === "pending"
-            ? "Resume verification"
-            : "Verify with Didit"}
-        </Button>
-      )}
-      {status.kycLevel < 2 && (
-        <div style={{ fontSize: 12, color: T.textMuted }}>
-          Complete the steps above first.
-        </div>
-      )}
-    </Card>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {KYC_LEVELS.slice(1).map((k) => (
+          <div
+            key={k.level}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              opacity: k.level <= level ? 1 : 0.4,
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background:
+                  k.level <= level
+                    ? k.color === "#3FA66B"
+                      ? "rgba(63,166,107,0.15)"
+                      : "rgba(242,169,59,0.15)"
+                    : T.surface,
+                border: `1px solid ${k.level <= level ? k.color || T.amber : T.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14,
+                flexShrink: 0,
+              }}
+            >
+              {k.icon}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: T.text }}>
+                {k.label}
+              </div>
+              <div style={{ fontSize: 12, color: T.textDim }}>{k.desc}</div>
+            </div>
+            {k.level <= level && (
+              <span
+                style={{
+                  marginLeft: "auto",
+                  color: k.color || T.amber,
+                  fontSize: 14,
+                }}
+              >
+                ✓
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-export default function Profile() {
+function EditProfileModal({ open, onClose, profile, onSave }) {
   const { theme: T } = useTheme();
-  const { userId } = useParams();
-  const { user, updateUser } = useAuth();
-  const isOwnProfile = !userId || userId === user?.id;
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [bvn, setBvn] = useState("");
-  const [nin, setNin] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [photoUploading, setPhotoUploading] = useState(false);
+  const [name, setName] = useState(profile?.name || "");
+  const [phone, setPhone] = useState(profile?.phone || "");
+  const [city, setCity] = useState(profile?.address?.city || "");
+  const [state, setState] = useState(profile?.address?.state || "");
+  const [primaryTag, setPrimaryTag] = useState(profile?.primaryTag || "buyer");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
+  const SelectStyle = {
+    width: "100%",
+    background: T.bg,
+    color: T.text,
+    border: `1px solid ${T.border}`,
+    borderRadius: 10,
+    padding: "12px 14px",
+    fontSize: 14,
+    outline: "none",
+    fontFamily: "'Inter',sans-serif",
+    marginBottom: 14,
+  };
+
+  async function save(e) {
+    e.preventDefault();
+    setError("");
     setLoading(true);
-    const endpoint = isOwnProfile ? "/profile" : `/profile/${userId}`;
-    api(endpoint)
-      .then((d) => {
-        setProfile(d.user);
-        if (isOwnProfile) {
-          setName(d.user.name || "");
-          setPhone(d.user.phone || "");
-          setCity(d.user.address?.city || "");
-          setState(d.user.address?.state || "");
-        }
-      })
-      .finally(() => setLoading(false));
-  }, [isOwnProfile, userId]);
-
-  async function saveProfile() {
-    setSaving(true);
     try {
       const data = await api("/profile", {
         method: "PUT",
-        body: JSON.stringify({ name, phone, city, state }),
+        body: JSON.stringify({ name, phone, city, state, primaryTag }),
       });
-      setProfile(data.user);
-      updateUser({ name: data.user.name });
-      setEditing(false);
-      setToast("Profile updated");
+      onSave(data.user);
+      onClose();
     } catch (err) {
-      setToast(err.message);
+      setError(err.message);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
-  async function submitKycBasics() {
-    setSaving(true);
+  return (
+    <Modal open={open} onClose={onClose} title="Edit profile">
+      <form onSubmit={save}>
+        <Input
+          label="Full name"
+          value={name}
+          onChange={setName}
+          placeholder="Amaka Eze"
+          required
+        />
+        <Input
+          label="Phone number"
+          value={phone}
+          onChange={setPhone}
+          placeholder="08012345678"
+        />
+        <div style={{ marginBottom: 14 }}>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: T.textDim,
+              display: "block",
+              marginBottom: 5,
+            }}
+          >
+            Primary tag
+          </label>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["buyer", "seller", "rider"].map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setPrimaryTag(t)}
+                style={{
+                  flex: 1,
+                  border: `1px solid ${primaryTag === t ? T.amber : T.border}`,
+                  background: primaryTag === t ? T.amberBg : "transparent",
+                  color: primaryTag === t ? T.amber : T.textDim,
+                  borderRadius: 8,
+                  padding: "9px 0",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                  fontFamily: "'Inter',sans-serif",
+                }}
+              >
+                {t === "buyer" ? "🛒" : t === "seller" ? "🏪" : "🛵"} {t}
+              </button>
+            ))}
+          </div>
+        </div>
+        <Input
+          label="City"
+          value={city}
+          onChange={setCity}
+          placeholder="Lagos"
+        />
+        <label
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: T.textDim,
+            display: "block",
+            marginBottom: 5,
+          }}
+        >
+          State
+        </label>
+        <select
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          style={SelectStyle}
+        >
+          <option value="">Select state</option>
+          {STATES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        {error && (
+          <div
+            style={{
+              background: T.rustBg,
+              border: `1px solid ${T.rustBorder}`,
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 12,
+              fontSize: 13,
+              color: T.rust,
+            }}
+          >
+            {error}
+          </div>
+        )}
+        <Button type="submit" fullWidth loading={loading}>
+          Save changes
+        </Button>
+      </form>
+    </Modal>
+  );
+}
+
+function KYCModal({ open, onClose, onDone }) {
+  const { theme: T } = useTheme();
+  const [nin, setNin] = useState("");
+  const [bvn, setBvn] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const frontRef = useRef();
+  const backRef = useRef();
+  const selfieRef = useRef();
+  const [frontFile, setFrontFile] = useState(null);
+  const [backFile, setBackFile] = useState(null);
+  const [selfieFile, setSelfieFile] = useState(null);
+
+  async function submit(e) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      const formData = new FormData();
-      if (bvn) formData.append("bvn", bvn);
-      if (nin) formData.append("nin", nin);
-      const data = await apiForm("/profile/kyc", formData);
-      setToast("Submitted");
-      const p = await api("/profile");
-      setProfile(p.user);
+      const form = new FormData();
+      if (nin) form.append("nin", nin);
+      if (bvn) form.append("bvn", bvn);
+      if (frontFile) form.append("idFront", frontFile);
+      if (backFile) form.append("idBack", backFile);
+      if (selfieFile) form.append("selfie", selfieFile);
+      await apiForm("/profile/kyc", form);
+      onDone();
+      onClose();
     } catch (err) {
-      setToast(err.message);
+      setError(err.message);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
+
+  const FileBtn = ({ label, file, inputRef, capture, onChange }) => (
+    <div style={{ marginBottom: 12 }}>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture={capture}
+        style={{ display: "none" }}
+        onChange={(e) => onChange(e.target.files[0])}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        style={{
+          width: "100%",
+          border: `1px dashed ${file ? T.jade : T.border}`,
+          background: T.bg,
+          color: file ? T.jade : T.textDim,
+          borderRadius: 10,
+          padding: "12px",
+          cursor: "pointer",
+          fontSize: 13,
+          fontFamily: "'Inter',sans-serif",
+        }}
+      >
+        {file ? `✓ ${file.name}` : label}
+      </button>
+    </div>
+  );
+
+  return (
+    <Modal open={open} onClose={onClose} title="Submit KYC">
+      <form onSubmit={submit}>
+        <div
+          style={{
+            fontSize: 13,
+            color: T.textDim,
+            marginBottom: 16,
+            lineHeight: 1.6,
+          }}
+        >
+          Verify your identity to unlock the{" "}
+          <strong style={{ color: T.amber }}>Verified</strong> badge and build
+          trust with buyers/sellers.
+        </div>
+        <Input
+          label="NIN (National ID Number)"
+          value={nin}
+          onChange={setNin}
+          placeholder="12345678901"
+          hint="Either NIN or BVN required"
+        />
+        <Input
+          label="BVN (Bank Verification Number)"
+          value={bvn}
+          onChange={setBvn}
+          placeholder="12345678901"
+        />
+        <div
+          style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 700,
+            fontSize: 13,
+            color: T.text,
+            marginBottom: 10,
+            marginTop: 4,
+          }}
+        >
+          ID Documents
+        </div>
+        <FileBtn
+          label="📷 ID card front"
+          file={frontFile}
+          inputRef={frontRef}
+          capture="environment"
+          onChange={setFrontFile}
+        />
+        <FileBtn
+          label="📷 ID card back"
+          file={backFile}
+          inputRef={backRef}
+          capture="environment"
+          onChange={setBackFile}
+        />
+        <FileBtn
+          label="🤳 Selfie"
+          file={selfieFile}
+          inputRef={selfieRef}
+          capture="user"
+          onChange={setSelfieFile}
+        />
+        {error && (
+          <div
+            style={{
+              background: T.rustBg,
+              border: `1px solid ${T.rustBorder}`,
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 12,
+              fontSize: 13,
+              color: T.rust,
+            }}
+          >
+            {error}
+          </div>
+        )}
+        <Button type="submit" fullWidth loading={loading}>
+          Submit KYC
+        </Button>
+      </form>
+    </Modal>
+  );
+}
+
+export default function ProfilePage({ onAssistant }) {
+  const { theme: T } = useTheme();
+  const { user: authUser, updateUser } = useAuth();
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const photoRef = useRef();
+
+  const isMe = !userId || userId === authUser?.id;
+  const [profile, setProfile] = useState(null);
+  const [reviews, setReviews] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editModal, setEditModal] = useState(false);
+  const [kycModal, setKycModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const endpoint = isMe ? "/profile" : `/profile/${userId}`;
+    api(endpoint)
+      .then((d) => {
+        const p = d.user;
+        setProfile(p);
+        api(`/reviews/user/${p._id}`)
+          .then((r) => setReviews(r))
+          .catch(() => {});
+      })
+      .catch(() => navigate("/home"))
+      .finally(() => setLoading(false));
+  }, [userId]);
 
   async function handlePhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
-    setPhotoUploading(true);
+    setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("profilePhoto", file);
-      const data = await apiForm("/profile/photo", formData);
-      updateUser({ profilePhoto: data.profilePhoto });
+      const form = new FormData();
+      form.append("profilePhoto", file);
+      const data = await apiForm("/profile/photo", form);
       setProfile((p) => ({ ...p, profilePhoto: data.profilePhoto }));
-    } catch (err) {
-      setToast(err.message);
+      updateUser({ profilePhoto: data.profilePhoto });
+    } catch {
     } finally {
-      setPhotoUploading(false);
+      setUploading(false);
     }
   }
 
-  if (loading) {
+  if (loading)
     return (
-      <Layout>
+      <Layout onAssistant={onAssistant}>
         <div style={{ display: "flex", justifyContent: "center", padding: 80 }}>
-          <Spinner size={28} />
+          <Spinner size={40} />
         </div>
       </Layout>
     );
-  }
+  if (!profile) return null;
+
+  const tagIcon =
+    profile.primaryTag === "seller"
+      ? "🏪"
+      : profile.primaryTag === "rider"
+        ? "🛵"
+        : "🛒";
+  const verifiedLabel =
+    profile.kycLevel >= 2 ? `✓ Verified ${profile.primaryTag || "User"}` : null;
 
   return (
-    <Layout>
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+    <Layout onAssistant={onAssistant}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+      `}</style>
+
+      {!isMe && (
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: "none",
+            border: "none",
+            color: T.textDim,
+            cursor: "pointer",
+            fontSize: 14,
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontFamily: "'Inter',sans-serif",
+          }}
+        >
+          ← Back
+        </button>
+      )}
 
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          marginBottom: 20,
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: 20,
+          padding: "24px",
+          marginBottom: 16,
         }}
       >
-        <div style={{ position: "relative" }}>
-          <Avatar
-            name={profile?.name}
-            photo={profile?.profilePhoto}
-            size={72}
-          />
-          {isOwnProfile && (
-            <label
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ position: "relative" }}>
+            <Avatar
+              name={profile.name}
+              photo={profile.profilePhoto}
+              size={72}
+            />
+            {isMe && (
+              <>
+                <input
+                  ref={photoRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handlePhoto}
+                />
+                <button
+                  onClick={() => photoRef.current?.click()}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: T.amber,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {uploading ? "..." : "✎"}
+                </button>
+              </>
+            )}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div
               style={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-                background: T.amber,
-                borderRadius: "50%",
-                width: 26,
-                height: 26,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontSize: 12,
+                fontFamily: "'Syne',sans-serif",
+                fontWeight: 800,
+                fontSize: 20,
+                color: T.text,
+                marginBottom: 4,
               }}
             >
-              {photoUploading ? (
-                <Spinner size={12} color="#0A0A0F" />
-              ) : (
-                <Pencil size={12} color="#0A0A0F" />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhoto}
-                style={{ display: "none" }}
-              />
-            </label>
+              {profile.name}
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <Badge variant="muted">
+                {tagIcon} {profile.primaryTag || "buyer"}
+              </Badge>
+              {verifiedLabel && <Badge variant="jade">{verifiedLabel}</Badge>}
+            </div>
+          </div>
+          {isMe && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setEditModal(true)}
+            >
+              Edit
+            </Button>
           )}
         </div>
-        <div>
-          <div
-            style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800,
-              fontSize: 20,
-              color: T.text,
-            }}
-          >
-            {profile?.name}
-          </div>
-          <div style={{ fontSize: 13, color: T.textDim }}>
-            {profile?.address?.city}, {profile?.address?.state}
-          </div>
-          {profile?.kycLevel >= 3 && (
-            <Badge variant="jade">
-              <span
-                style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3,1fr)",
+            gap: 12,
+            paddingTop: 16,
+            borderTop: `1px solid ${T.border}`,
+          }}
+        >
+          {[
+            { label: "Reviews", value: reviews?.total || 0 },
+            {
+              label: "Rating",
+              value: reviews?.avgRating ? `⭐ ${reviews.avgRating}` : "—",
+            },
+            { label: "Location", value: profile.address?.state || "NG" },
+          ].map((s) => (
+            <div key={s.label} style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "'Syne',sans-serif",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  color: T.text,
+                }}
               >
-                <BadgeCheck size={12} /> Verified
-              </span>
-            </Badge>
-          )}
+                {s.value}
+              </div>
+              <div style={{ fontSize: 11, color: T.textDim, marginTop: 2 }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {isOwnProfile && <KycCard />}
-
-      {isOwnProfile && profile?.kycLevel === 1 && (
+      {isMe && (
         <Card style={{ marginBottom: 16 }}>
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: T.text,
-              marginBottom: 12,
-            }}
-          >
-            Submit BVN or NIN
-          </div>
-          <Input
-            label="BVN (optional)"
-            value={bvn}
-            onChange={setBvn}
-            placeholder="11 digits"
-          />
-          <Input
-            label="NIN (optional)"
-            value={nin}
-            onChange={setNin}
-            placeholder="11 digits"
-          />
-          <Button
-            fullWidth
-            loading={saving}
-            onClick={submitKycBasics}
-            disabled={!bvn && !nin}
-          >
-            Submit
-          </Button>
-        </Card>
-      )}
-
-      {isOwnProfile && (
-        <Card>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 12,
-            }}
-          >
-            <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>
-              Personal details
-            </div>
-            {!editing && (
-              <button
-                onClick={() => setEditing(true)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: T.amber,
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Edit
-              </button>
-            )}
-          </div>
-          {editing ? (
-            <>
-              <Input label="Full name" value={name} onChange={setName} />
-              <Input label="Phone" value={phone} onChange={setPhone} />
-              <div style={{ display: "flex", gap: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <Input label="City" value={city} onChange={setCity} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <Input label="State" value={state} onChange={setState} />
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <Button fullWidth loading={saving} onClick={saveProfile}>
-                  Save
-                </Button>
-                <Button
-                  fullWidth
-                  variant="secondary"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div style={{ fontSize: 13, color: T.textDim, lineHeight: 2 }}>
-              <div>
-                Email: <span style={{ color: T.text }}>{profile?.email}</span>
-              </div>
-              <div>
-                Phone:{" "}
-                <span style={{ color: T.text }}>{profile?.phone || "—"}</span>
-              </div>
-              <Divider />
-              <div>
-                Wallet balance:{" "}
-                <span style={{ color: T.amber, fontWeight: 700 }}>
-                  ₦{Number(profile?.walletBalance || 0).toLocaleString()}
-                </span>
-              </div>
-            </div>
+          <KYCProgress level={profile.kycLevel || 0} />
+          {profile.kycLevel < 3 && (
+            <Button variant="ghost" fullWidth onClick={() => setKycModal(true)}>
+              🪪{" "}
+              {profile.kycLevel === 0
+                ? "Start verification"
+                : "Continue verification"}
+            </Button>
           )}
         </Card>
       )}
+
+      {reviews?.reviews?.length > 0 && (
+        <Card>
+          <div
+            style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 700,
+              fontSize: 15,
+              color: T.text,
+              marginBottom: 14,
+            }}
+          >
+            Reviews ({reviews.total})
+          </div>
+          {reviews.reviews.map((r, i) => (
+            <div
+              key={i}
+              style={{
+                paddingBottom: i < reviews.reviews.length - 1 ? 14 : 0,
+                marginBottom: i < reviews.reviews.length - 1 ? 14 : 0,
+                borderBottom:
+                  i < reviews.reviews.length - 1
+                    ? `1px solid ${T.border}`
+                    : "none",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 6,
+                }}
+              >
+                <Avatar
+                  name={r.reviewer?.name}
+                  photo={r.reviewer?.profilePhoto}
+                  size={28}
+                />
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>
+                  {r.reviewer?.name}
+                </span>
+                <span style={{ fontSize: 12, color: T.amber }}>
+                  {"★".repeat(r.rating)}
+                  {"☆".repeat(5 - r.rating)}
+                </span>
+              </div>
+              {r.comment && (
+                <div
+                  style={{ fontSize: 13, color: T.textDim, lineHeight: 1.5 }}
+                >
+                  {r.comment}
+                </div>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      <EditProfileModal
+        open={editModal}
+        onClose={() => setEditModal(false)}
+        profile={profile}
+        onSave={(updated) => {
+          setProfile(updated);
+          updateUser(updated);
+        }}
+      />
+      <KYCModal
+        open={kycModal}
+        onClose={() => setKycModal(false)}
+        onDone={() => api("/profile").then((d) => setProfile(d.user))}
+      />
     </Layout>
   );
 }

@@ -174,7 +174,11 @@ function NavBar({ onAuthClick }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <img src="/logo.png" alt="PaxeL" style={{ height: 34 }} />
+        <img
+          src="/logo.jpg"
+          alt="PaxeL"
+          style={{ height: 34, borderRadius: 8 }}
+        />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",
@@ -403,7 +407,7 @@ function Hero({ onAuthClick }) {
         >
           <TradeTicket />
           <img
-            src="/hero-mockup.png"
+            src="/hero.png"
             alt="PaxeL user"
             style={{
               width: "min(280px, 80vw)",
@@ -630,7 +634,7 @@ function NombaSection() {
           }}
         >
           <img
-            src="/nomba-mark.png"
+            src="/nomba-logo.png"
             alt="Nomba"
             style={{ height: 40, opacity: T.name === "dark" ? 0.9 : 0.8 }}
           />
@@ -882,7 +886,11 @@ function Footer() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <img src="/logo.png" alt="PaxeL" style={{ height: 28 }} />
+        <img
+          src="/logo.jpg"
+          alt="PaxeL"
+          style={{ height: 28, borderRadius: 6 }}
+        />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",

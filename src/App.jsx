@@ -11,6 +11,7 @@ import TradeDetailPage from "./pages/TradeDetail";
 import WalletPage from "./pages/Wallet";
 import ProfilePage from "./pages/Profile";
 import AssistantWidget from "./pages/Assistant";
+import LandingPage from "./pages/Landing";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();

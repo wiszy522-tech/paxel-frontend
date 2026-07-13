@@ -1,25 +1,29 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const C = {
-  bg: "#0A0A0F",
-  surface: "#1C1F2B",
-  border: "#2A2E3D",
-  amber: "#F2A93B",
-  amberDim: "#B9790A",
-  jade: "#3FA66B",
-  rust: "#C1502E",
-  text: "#F1EDE3",
-  textDim: "#9CA0AE",
-};
+import {
+  ShieldCheck,
+  Package,
+  CheckCircle2,
+  Star,
+  ShieldAlert,
+  MessageCircle,
+  Zap,
+  Bus,
+  CreditCard,
+  Check,
+  ArrowRight,
+} from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import { ThemeToggle } from "../components/Layout";
 
 const STEPS = [
-  { state: "SECURED", label: "Funds locked in escrow", color: C.amber },
-  { state: "DISPATCHED", label: "Goods in transit", color: C.amber },
-  { state: "RELEASED", label: "Payment released", color: C.jade },
+  { state: "SECURED", label: "Funds locked in escrow" },
+  { state: "DISPATCHED", label: "Goods in transit" },
+  { state: "RELEASED", label: "Payment released" },
 ];
 
 function TradeTicket() {
+  const { theme: T } = useTheme();
   const [step, setStep] = useState(0);
   const [stamping, setStamping] = useState(false);
 
@@ -35,6 +39,7 @@ function TradeTicket() {
   }, []);
 
   const current = STEPS[step];
+  const color = current.state === "RELEASED" ? T.jade : T.amber;
 
   return (
     <div
@@ -104,8 +109,8 @@ function TradeTicket() {
       <div
         key={step}
         style={{
-          border: `2px solid ${current.color}`,
-          color: current.color,
+          border: `2px solid ${color}`,
+          color: color,
           borderRadius: 10,
           padding: "10px 14px",
           textAlign: "center",
@@ -136,6 +141,7 @@ function TradeTicket() {
 }
 
 function NavBar({ onAuthClick }) {
+  const { theme: T } = useTheme();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -152,9 +158,13 @@ function NavBar({ onAuthClick }) {
         left: 0,
         right: 0,
         zIndex: 100,
-        background: scrolled ? "rgba(10,10,15,0.95)" : "transparent",
+        background: scrolled
+          ? T.name === "dark"
+            ? "rgba(10,10,15,0.95)"
+            : "rgba(244,241,235,0.95)"
+          : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
-        borderBottom: scrolled ? `1px solid ${C.border}` : "none",
+        borderBottom: scrolled ? `1px solid ${T.border}` : "none",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -164,28 +174,24 @@ function NavBar({ onAuthClick }) {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <img
-          src="/logo.jpg"
-          alt="PaxeL"
-          style={{ height: 34, borderRadius: 6 }}
-        />
+        <img src="/logo.png" alt="PaxeL" style={{ height: 34 }} />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",
             fontWeight: 800,
             fontSize: 22,
-            color: C.text,
+            color: T.text,
           }}
         >
-          Pax<span style={{ color: C.amber }}>eL</span>
+          Pax<span style={{ color: T.amber }}>eL</span>
         </span>
       </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <a
           href="#how"
-          className="nav-link"
+          className="how-it-works-link"
           style={{
-            color: C.textDim,
+            color: T.textDim,
             textDecoration: "none",
             fontSize: 14,
             padding: "8px 14px",
@@ -193,12 +199,13 @@ function NavBar({ onAuthClick }) {
         >
           How it works
         </a>
+        <ThemeToggle />
         <button
           onClick={onAuthClick}
           style={{
             background: "transparent",
-            border: `1px solid ${C.border}`,
-            color: C.text,
+            border: `1px solid ${T.border}`,
+            color: T.text,
             cursor: "pointer",
             fontSize: 14,
             padding: "8px 18px",
@@ -210,7 +217,7 @@ function NavBar({ onAuthClick }) {
         <button
           onClick={onAuthClick}
           style={{
-            background: C.amber,
+            background: T.amber,
             border: "none",
             color: "#0A0A0F",
             cursor: "pointer",
@@ -223,17 +230,13 @@ function NavBar({ onAuthClick }) {
           Get started
         </button>
       </div>
-
-      <style>{`
-        @media (max-width: 600px) {
-          .nav-link { display: none !important; }
-        }
-      `}</style>
     </nav>
   );
 }
 
 function Hero({ onAuthClick }) {
+  const { theme: T } = useTheme();
+
   return (
     <section
       style={{
@@ -241,7 +244,7 @@ function Hero({ onAuthClick }) {
         display: "flex",
         alignItems: "center",
         padding: "100px 5vw 60px",
-        background: `radial-gradient(ellipse 80% 60% at 60% 40%, rgba(242,169,59,0.08) 0%, transparent 70%), ${C.bg}`,
+        background: `radial-gradient(ellipse 80% 60% at 60% 40%, rgba(242,169,59,0.08) 0%, transparent 70%), ${T.bg}`,
         overflow: "hidden",
       }}
     >
@@ -274,7 +277,7 @@ function Hero({ onAuthClick }) {
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                background: C.jade,
+                background: T.jade,
                 display: "inline-block",
                 animation: "pulse 2s infinite",
               }}
@@ -282,7 +285,7 @@ function Hero({ onAuthClick }) {
             <span
               style={{
                 fontSize: 13,
-                color: C.jade,
+                color: T.jade,
                 fontFamily: "'IBM Plex Mono', monospace",
               }}
             >
@@ -296,13 +299,13 @@ function Hero({ onAuthClick }) {
               fontWeight: 800,
               fontSize: "clamp(38px, 5.5vw, 68px)",
               lineHeight: 1.08,
-              color: C.text,
+              color: T.text,
               margin: "0 0 24px",
             }}
           >
             Trade with strangers.
             <br />
-            <span style={{ color: C.amber }}>Trust the system,</span>
+            <span style={{ color: T.amber }}>Trust the system,</span>
             <br />
             not the person.
           </h1>
@@ -310,7 +313,7 @@ function Hero({ onAuthClick }) {
           <p
             style={{
               fontSize: "clamp(15px, 2vw, 18px)",
-              color: C.textDim,
+              color: T.textDim,
               lineHeight: 1.75,
               maxWidth: 480,
               margin: "0 0 36px",
@@ -325,7 +328,7 @@ function Hero({ onAuthClick }) {
             <button
               onClick={onAuthClick}
               style={{
-                background: C.amber,
+                background: T.amber,
                 border: "none",
                 color: "#0A0A0F",
                 cursor: "pointer",
@@ -333,15 +336,18 @@ function Hero({ onAuthClick }) {
                 fontSize: 16,
                 padding: "14px 28px",
                 borderRadius: 12,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              Start trading safely →
+              Start trading safely <ArrowRight size={17} />
             </button>
             <a
               href="#how"
               style={{
-                border: `1px solid ${C.border}`,
-                color: C.text,
+                border: `1px solid ${T.border}`,
+                color: T.text,
                 textDecoration: "none",
                 fontWeight: 600,
                 fontSize: 16,
@@ -364,7 +370,7 @@ function Hero({ onAuthClick }) {
           >
             {[
               { label: "Trades secured", value: "Live" },
-              { label: "Nomba-powered", value: "✓" },
+              { label: "Nomba-powered", icon: Check },
               { label: "Disputes resolved", value: "100%" },
             ].map((s) => (
               <div key={s.label}>
@@ -373,12 +379,12 @@ function Hero({ onAuthClick }) {
                     fontFamily: "'Syne', sans-serif",
                     fontWeight: 800,
                     fontSize: 24,
-                    color: C.amber,
+                    color: T.amber,
                   }}
                 >
-                  {s.value}
+                  {s.icon ? <s.icon size={22} strokeWidth={3} /> : s.value}
                 </div>
-                <div style={{ fontSize: 12, color: C.textDim, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: T.textDim, marginTop: 2 }}>
                   {s.label}
                 </div>
               </div>
@@ -397,7 +403,7 @@ function Hero({ onAuthClick }) {
         >
           <TradeTicket />
           <img
-            src="/hero.png"
+            src="/hero-mockup.png"
             alt="PaxeL user"
             style={{
               width: "min(280px, 80vw)",
@@ -411,41 +417,42 @@ function Hero({ onAuthClick }) {
 }
 
 function HowItWorks() {
+  const { theme: T } = useTheme();
   const steps = [
     {
       n: "01",
       title: "Fund your wallet",
       body: "Transfer to your personal PaxeL account number from any Nigerian bank. Funds settle instantly via Nomba.",
-      icon: "💳",
+      Icon: CreditCard,
     },
     {
       n: "02",
       title: "Place an order",
       body: "Browse products, pick a vendor, and lock your payment into escrow with one tap.",
-      icon: "🔒",
+      Icon: ShieldCheck,
     },
     {
       n: "03",
       title: "Seller dispatches",
       body: "Seller logs driver name, bus number (e.g. PMT 1001), and a live waybill photo. You get the driver's contact instantly.",
-      icon: "🚌",
+      Icon: Bus,
     },
     {
       n: "04",
       title: "Confirm receipt",
       body: "Goods arrive? Take a live photo and confirm. Payment releases instantly to the seller's wallet.",
-      icon: "✅",
+      Icon: CheckCircle2,
     },
   ];
 
   return (
-    <section id="how" style={{ padding: "100px 5vw", background: C.bg }}>
+    <section id="how" style={{ padding: "100px 5vw", background: T.bg }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <div
             style={{
               fontSize: 11,
-              color: C.amber,
+              color: T.amber,
               fontFamily: "'IBM Plex Mono', monospace",
               letterSpacing: "0.15em",
               marginBottom: 12,
@@ -458,7 +465,7 @@ function HowItWorks() {
               fontFamily: "'Syne', sans-serif",
               fontWeight: 800,
               fontSize: "clamp(28px, 4vw, 48px)",
-              color: C.text,
+              color: T.text,
               margin: 0,
             }}
           >
@@ -476,24 +483,26 @@ function HowItWorks() {
             <div
               key={s.n}
               style={{
-                background: C.surface,
-                border: `1px solid ${C.border}`,
+                background: T.surface,
+                border: `1px solid ${T.border}`,
                 borderRadius: 16,
                 padding: "28px 24px",
                 transition: "border-color 0.2s",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.borderColor = C.amber)
+                (e.currentTarget.style.borderColor = T.amber)
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.borderColor = C.border)
+                (e.currentTarget.style.borderColor = T.border)
               }
             >
-              <div style={{ fontSize: 32, marginBottom: 16 }}>{s.icon}</div>
+              <div style={{ color: T.amber, marginBottom: 16 }}>
+                <s.Icon size={28} />
+              </div>
               <div
                 style={{
                   fontFamily: "'IBM Plex Mono', monospace",
-                  color: C.amber,
+                  color: T.amber,
                   fontSize: 11,
                   marginBottom: 8,
                 }}
@@ -505,13 +514,13 @@ function HowItWorks() {
                   fontFamily: "'Syne', sans-serif",
                   fontWeight: 700,
                   fontSize: 17,
-                  color: C.text,
+                  color: T.text,
                   marginBottom: 10,
                 }}
               >
                 {s.title}
               </div>
-              <div style={{ fontSize: 13, color: C.textDim, lineHeight: 1.65 }}>
+              <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.65 }}>
                 {s.body}
               </div>
             </div>
@@ -523,13 +532,14 @@ function HowItWorks() {
 }
 
 function NombaSection() {
+  const { theme: T } = useTheme();
   return (
     <section
       style={{
         padding: "80px 5vw",
-        background: `linear-gradient(135deg, rgba(242,169,59,0.06) 0%, rgba(10,10,15,0) 60%), ${C.surface}`,
-        borderTop: `1px solid ${C.border}`,
-        borderBottom: `1px solid ${C.border}`,
+        background: `linear-gradient(135deg, rgba(242,169,59,0.06) 0%, rgba(10,10,15,0) 60%), ${T.surface}`,
+        borderTop: `1px solid ${T.border}`,
+        borderBottom: `1px solid ${T.border}`,
       }}
     >
       <div
@@ -546,7 +556,7 @@ function NombaSection() {
           <div
             style={{
               fontSize: 11,
-              color: C.amber,
+              color: T.amber,
               fontFamily: "'IBM Plex Mono', monospace",
               letterSpacing: "0.15em",
               marginBottom: 16,
@@ -559,18 +569,18 @@ function NombaSection() {
               fontFamily: "'Syne', sans-serif",
               fontWeight: 800,
               fontSize: "clamp(24px, 3.5vw, 40px)",
-              color: C.text,
+              color: T.text,
               marginBottom: 20,
             }}
           >
             Every naira moves
             <br />
-            on <span style={{ color: C.amber }}>Nomba rails.</span>
+            on <span style={{ color: T.amber }}>Nomba rails.</span>
           </h2>
           <p
             style={{
               fontSize: 15,
-              color: C.textDim,
+              color: T.textDim,
               lineHeight: 1.75,
               marginBottom: 24,
             }}
@@ -596,7 +606,7 @@ function NombaSection() {
                   borderRadius: 999,
                   padding: "5px 14px",
                   fontSize: 12,
-                  color: C.amber,
+                  color: T.amber,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}
               >
@@ -608,8 +618,8 @@ function NombaSection() {
         <div
           style={{
             flex: "0 0 auto",
-            background: C.bg,
-            border: `1px solid ${C.border}`,
+            background: T.bg,
+            border: `1px solid ${T.border}`,
             borderRadius: 20,
             padding: "32px",
             display: "flex",
@@ -620,27 +630,23 @@ function NombaSection() {
           }}
         >
           <img
-            src="/nomba-logo.png"
+            src="/nomba-mark.png"
             alt="Nomba"
-            style={{
-              height: 40,
-              filter: "brightness(0) invert(1)",
-              opacity: 0.9,
-            }}
+            style={{ height: 40, opacity: T.name === "dark" ? 0.9 : 0.8 }}
           />
-          <div style={{ width: 48, height: 1, background: C.border }} />
+          <div style={{ width: 48, height: 1, background: T.border }} />
           <div style={{ textAlign: "center" }}>
             <div
               style={{
                 fontFamily: "'Syne', sans-serif",
                 fontWeight: 800,
                 fontSize: 28,
-                color: C.amber,
+                color: T.amber,
               }}
             >
               ₦0+
             </div>
-            <div style={{ fontSize: 12, color: C.textDim }}>Secured so far</div>
+            <div style={{ fontSize: 12, color: T.textDim }}>Secured so far</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div
@@ -648,12 +654,12 @@ function NombaSection() {
                 fontFamily: "'Syne', sans-serif",
                 fontWeight: 800,
                 fontSize: 28,
-                color: C.jade,
+                color: T.jade,
               }}
             >
               100%
             </div>
-            <div style={{ fontSize: 12, color: C.textDim }}>
+            <div style={{ fontSize: 12, color: T.textDim }}>
               Settlement rate
             </div>
           </div>
@@ -664,47 +670,48 @@ function NombaSection() {
 }
 
 function TrustSection() {
+  const { theme: T } = useTheme();
   const features = [
     {
-      icon: "🔐",
+      Icon: ShieldCheck,
       title: "Escrow-backed",
       body: "Your money never reaches the seller until you physically confirm receipt of your goods.",
     },
     {
-      icon: "📦",
+      Icon: Package,
       title: "Waybill verified",
       body: "Driver name, bus number, and live dispatch photo required. No photo, no shipment.",
     },
     {
-      icon: "⭐",
+      Icon: Star,
       title: "Verified reviews",
       body: "Only buyers who completed a real trade can leave a review. Zero fake ratings.",
     },
     {
-      icon: "🛡️",
+      Icon: ShieldAlert,
       title: "Dispute protection",
       body: "If something goes wrong, our agents review photo evidence and resolve it fairly.",
     },
     {
-      icon: "💬",
+      Icon: MessageCircle,
       title: "In-app chat only",
       body: "All communication stays inside PaxeL. Your phone number is never exposed to strangers.",
     },
     {
-      icon: "⚡",
+      Icon: Zap,
       title: "Instant settlement",
       body: "Powered by Nomba. Funds release to your wallet in seconds, not days.",
     },
   ];
 
   return (
-    <section style={{ padding: "100px 5vw", background: C.bg }}>
+    <section style={{ padding: "100px 5vw", background: T.bg }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 64 }}>
           <div
             style={{
               fontSize: 11,
-              color: C.amber,
+              color: T.amber,
               fontFamily: "'IBM Plex Mono', monospace",
               letterSpacing: "0.15em",
               marginBottom: 12,
@@ -717,14 +724,14 @@ function TrustSection() {
               fontFamily: "'Syne', sans-serif",
               fontWeight: 800,
               fontSize: "clamp(28px, 4vw, 48px)",
-              color: C.text,
+              color: T.text,
               margin: 0,
             }}
           >
             Built for Nigerian trade.
             <br />
             <span
-              style={{ color: C.textDim, fontWeight: 400, fontSize: "0.65em" }}
+              style={{ color: T.textDim, fontWeight: 400, fontSize: "0.65em" }}
             >
               Not a checkout page. An entire trust layer.
             </span>
@@ -741,8 +748,8 @@ function TrustSection() {
             <div
               key={f.title}
               style={{
-                background: C.surface,
-                border: `1px solid ${C.border}`,
+                background: T.surface,
+                border: `1px solid ${T.border}`,
                 borderRadius: 16,
                 padding: "24px",
                 display: "flex",
@@ -752,27 +759,29 @@ function TrustSection() {
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.borderColor = C.amber;
+                e.currentTarget.style.borderColor = T.amber;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.borderColor = C.border;
+                e.currentTarget.style.borderColor = T.border;
               }}
             >
-              <div style={{ fontSize: 22, flexShrink: 0 }}>{f.icon}</div>
+              <div style={{ color: T.amber, flexShrink: 0 }}>
+                <f.Icon size={22} />
+              </div>
               <div>
                 <div
                   style={{
                     fontWeight: 700,
                     fontSize: 15,
-                    color: C.text,
+                    color: T.text,
                     marginBottom: 6,
                   }}
                 >
                   {f.title}
                 </div>
                 <div
-                  style={{ fontSize: 13, color: C.textDim, lineHeight: 1.6 }}
+                  style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6 }}
                 >
                   {f.body}
                 </div>
@@ -786,11 +795,12 @@ function TrustSection() {
 }
 
 function CTA({ onAuthClick }) {
+  const { theme: T } = useTheme();
   return (
     <section
       style={{
         padding: "120px 5vw",
-        background: `radial-gradient(ellipse 60% 70% at 50% 50%, rgba(242,169,59,0.1) 0%, transparent 70%), ${C.bg}`,
+        background: `radial-gradient(ellipse 60% 70% at 50% 50%, rgba(242,169,59,0.1) 0%, transparent 70%), ${T.bg}`,
         textAlign: "center",
       }}
     >
@@ -800,19 +810,19 @@ function CTA({ onAuthClick }) {
             fontFamily: "'Syne', sans-serif",
             fontWeight: 800,
             fontSize: "clamp(32px, 5vw, 56px)",
-            color: C.text,
+            color: T.text,
             margin: "0 0 20px",
             lineHeight: 1.1,
           }}
         >
           Ready to trade
           <br />
-          <span style={{ color: C.amber }}>without the risk?</span>
+          <span style={{ color: T.amber }}>without the risk?</span>
         </h2>
         <p
           style={{
             fontSize: 16,
-            color: C.textDim,
+            color: T.textDim,
             lineHeight: 1.7,
             marginBottom: 36,
             maxWidth: 460,
@@ -825,7 +835,7 @@ function CTA({ onAuthClick }) {
         <button
           onClick={onAuthClick}
           style={{
-            background: C.amber,
+            background: T.amber,
             border: "none",
             color: "#0A0A0F",
             cursor: "pointer",
@@ -835,6 +845,9 @@ function CTA({ onAuthClick }) {
             borderRadius: 14,
             boxShadow: "0 8px 32px rgba(242,169,59,0.3)",
             transition: "transform 0.15s, box-shadow 0.15s",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "scale(1.04)";
@@ -846,7 +859,7 @@ function CTA({ onAuthClick }) {
             e.currentTarget.style.boxShadow = "0 8px 32px rgba(242,169,59,0.3)";
           }}
         >
-          Create your free account →
+          Create your free account <ArrowRight size={18} />
         </button>
       </div>
     </section>
@@ -854,12 +867,13 @@ function CTA({ onAuthClick }) {
 }
 
 function Footer() {
+  const { theme: T } = useTheme();
   return (
     <footer
       style={{
         padding: "32px 5vw",
-        background: C.surface,
-        borderTop: `1px solid ${C.border}`,
+        background: T.surface,
+        borderTop: `1px solid ${T.border}`,
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -868,52 +882,52 @@ function Footer() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <img
-          src="/logo.jpg"
-          alt="PaxeL"
-          style={{ height: 28, borderRadius: 4 }}
-        />
+        <img src="/logo.png" alt="PaxeL" style={{ height: 28 }} />
         <span
           style={{
             fontFamily: "'Syne', sans-serif",
             fontWeight: 700,
-            color: C.text,
+            color: T.text,
           }}
         >
-          Pax<span style={{ color: C.amber }}>eL</span>
+          Pax<span style={{ color: T.amber }}>eL</span>
         </span>
       </div>
-      <span style={{ fontSize: 12, color: C.textDim }}>
+      <span style={{ fontSize: 12, color: T.textDim }}>
         © {new Date().getFullYear()} PaxeL · GlobTec
       </span>
-      <span style={{ fontSize: 12, color: C.textDim }}>
+      <span style={{ fontSize: 12, color: T.textDim }}>
         Nomba × DevCareer Hackathon 2026
       </span>
     </footer>
   );
 }
 
-export default function LandingPage() {
+export default function Landing() {
+  const { theme: T } = useTheme();
   const navigate = useNavigate();
   const goToAuth = () => navigate("/auth");
 
   return (
     <div
       style={{
-        background: C.bg,
+        background: T.bg,
         minHeight: "100vh",
         fontFamily: "'Inter', sans-serif",
-        color: C.text,
+        color: T.text,
       }}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body { background: #0A0A0F; overflow-x: hidden; }
         a { transition: opacity 0.15s; }
         a:hover { opacity: 0.82; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .how-it-works-link { display: inline-block; }
+        @media (max-width: 600px) {
+          .how-it-works-link { display: none !important; }
+        }
       `}</style>
 
       <NavBar onAuthClick={goToAuth} />

@@ -30,5 +30,3 @@ export async function apiForm(path, formData) {
 }
 
 export const BASE_URL = BASE;
-
-

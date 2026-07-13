@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Avatar } from "./UI";
-import AssistantWidget from "./AssistantWidget";
 
 const NAV = [
   { path: "/home", icon: "🏪", label: "Market" },
@@ -59,7 +58,7 @@ export function LogoPulse() {
         }
       `}</style>
       <img
-        src="/logo.png"
+        src="/logo.jpg"
         alt="PaxeL"
         style={{
           width: 88,
@@ -82,7 +81,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav() {
+export function TopNav({ onAssistant }) {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -118,7 +117,7 @@ export function TopNav() {
         }}
       >
         <img
-          src="/logo.png"
+          src="/logo.jpg"
           alt="PaxeL"
           style={{ height: 30, borderRadius: 6 }}
         />
@@ -135,6 +134,27 @@ export function TopNav() {
       </div>
 
       <div style={{ flex: 1 }} />
+
+      <button
+        onClick={onAssistant}
+        style={{
+          background: T.amberBg,
+          border: `1px solid ${T.amberBorder}`,
+          color: T.amber,
+          borderRadius: 999,
+          padding: "6px 14px",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <span>✨</span>
+        <span className="hide-mobile">AI Assistant</span>
+      </button>
 
       <ThemeToggle />
 
@@ -303,15 +323,14 @@ export function BottomNav() {
   );
 }
 
-export function Layout({ children }) {
+export function Layout({ children, onAssistant }) {
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav />
+      <TopNav onAssistant={onAssistant} />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>
       <BottomNav />
-      <AssistantWidget />
     </div>
   );
 }

@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AuthPage from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import KycCallback from "./pages/KycCallback";
+import TermsPage from "./pages/TermsPage";
 import HomePage from "./pages/Home";
 import ProductDetailPage from "./pages/ProductDetail";
 import CreateProductPage from "./pages/CreateProduct";
@@ -39,6 +42,19 @@ function AppRoutes() {
             <PublicRoute>
               <AuthPage />
             </PublicRoute>
+          }
+        />
+
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
+        <Route path="/terms" element={<TermsPage />} />
+
+        <Route
+          path="/kyc/callback"
+          element={
+            <ProtectedRoute>
+              <KycCallback />
+            </ProtectedRoute>
           }
         />
 

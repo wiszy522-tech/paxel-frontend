@@ -16,7 +16,6 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      title={`Switch to ${T.name === "dark" ? "light" : "dark"} mode`}
       style={{
         background: T.surface,
         border: `1px solid ${T.border}`,
@@ -53,8 +52,8 @@ export function LogoPulse() {
     >
       <style>{`
         @keyframes logoPulse {
-          0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(242,169,59,0.4); }
-          50% { transform: scale(1.15); opacity: 0.8; box-shadow: 0 0 0 20px rgba(242,169,59,0); }
+          0%,100%{transform:scale(1);opacity:1;box-shadow:0 0 0 0 rgba(242,169,59,0.4)}
+          50%{transform:scale(1.15);opacity:0.8;box-shadow:0 0 0 20px rgba(242,169,59,0)}
         }
       `}</style>
       <img
@@ -69,7 +68,7 @@ export function LogoPulse() {
       />
       <span
         style={{
-          fontFamily: "'Syne', sans-serif",
+          fontFamily: "'Syne',sans-serif",
           fontWeight: 800,
           fontSize: 24,
           color: "#F1EDE3",
@@ -81,7 +80,7 @@ export function LogoPulse() {
   );
 }
 
-export function TopNav({ onAssistant }) {
+export function TopNav() {
   const { theme: T } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -123,7 +122,7 @@ export function TopNav({ onAssistant }) {
         />
         <span
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'Syne',sans-serif",
             fontWeight: 800,
             fontSize: 18,
             color: T.text,
@@ -134,27 +133,6 @@ export function TopNav({ onAssistant }) {
       </div>
 
       <div style={{ flex: 1 }} />
-
-      <button
-        onClick={onAssistant}
-        style={{
-          background: T.amberBg,
-          border: `1px solid ${T.amberBorder}`,
-          color: T.amber,
-          borderRadius: 999,
-          padding: "6px 14px",
-          fontSize: 13,
-          fontWeight: 600,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontFamily: "'Inter', sans-serif",
-        }}
-      >
-        <span>✨</span>
-        <span className="hide-mobile">AI Assistant</span>
-      </button>
 
       <ThemeToggle />
 
@@ -175,7 +153,7 @@ export function TopNav({ onAssistant }) {
               border: `1px solid ${T.border}`,
               borderRadius: 12,
               padding: 8,
-              minWidth: 180,
+              minWidth: 190,
               boxShadow: `0 8px 32px ${T.shadow}`,
               zIndex: 200,
             }}
@@ -213,7 +191,7 @@ export function TopNav({ onAssistant }) {
                   alignItems: "center",
                   gap: 10,
                   textAlign: "left",
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Inter',sans-serif",
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background = T.surfaceAlt)
@@ -244,7 +222,7 @@ export function TopNav({ onAssistant }) {
                 alignItems: "center",
                 gap: 10,
                 textAlign: "left",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Inter',sans-serif",
               }}
             >
               🚪 Logout
@@ -274,7 +252,7 @@ export function BottomNav() {
         backdropFilter: "blur(12px)",
         borderTop: `1px solid ${T.border}`,
         display: "flex",
-        padding: "8px 0 max(8px, env(safe-area-inset-bottom))",
+        padding: "8px 0 max(8px,env(safe-area-inset-bottom))",
       }}
     >
       {NAV.map((item) => {
@@ -301,7 +279,7 @@ export function BottomNav() {
                 fontSize: 10,
                 fontWeight: active ? 700 : 400,
                 color: active ? T.amber : T.textDim,
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Inter',sans-serif",
               }}
             >
               {item.label}
@@ -323,14 +301,54 @@ export function BottomNav() {
   );
 }
 
+export function AssistantFAB({ onOpen }) {
+  const { theme: T } = useTheme();
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onOpen}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      title="PaxeL Assistant"
+      style={{
+        position: "fixed",
+        right: 16,
+        bottom: 88,
+        zIndex: 99,
+        width: 52,
+        height: 52,
+        borderRadius: "50%",
+        border: `2px solid ${hovered ? T.amber : T.amberBorder}`,
+        background: T.surface,
+        cursor: "pointer",
+        padding: 0,
+        overflow: "hidden",
+        boxShadow: hovered
+          ? `0 8px 24px rgba(242,169,59,0.4)`
+          : `0 4px 16px ${T.shadow}`,
+        transform: hovered ? "scale(1.08)" : "scale(1)",
+        transition: "all 0.2s",
+      }}
+    >
+      <img
+        src="/logo.jpg"
+        alt="AI"
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    </button>
+  );
+}
+
 export function Layout({ children, onAssistant }) {
   return (
     <div style={{ paddingTop: 60, paddingBottom: 72, minHeight: "100vh" }}>
-      <TopNav onAssistant={onAssistant} />
+      <TopNav />
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
         {children}
       </main>
       <BottomNav />
+      <AssistantFAB onOpen={onAssistant} />
     </div>
   );
 }

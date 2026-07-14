@@ -8,39 +8,82 @@ export default function AssistantWidget({ open, onClose }) {
     {
       role: "assistant",
       content:
-        "Hi! I'm your PaxeL trade assistant. I can help you understand your trades, explain how escrow works, or guide you through any step. What do you need?",
+        "Hi! I'm your PaxeL trade assistant. I can help with your trades, explain escrow, or guide you through any step. What do you need?",
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pos, setPos] = useState({ x: null, y: null });
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const bottomRef = useRef();
   const inputRef = useRef();
+  const widgetRef = useRef();
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 100);
+    if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, loading]);
+
+  function onDragStart(e) {
+    if (e.target.closest("input, button, textarea")) return;
+    const rect = widgetRef.current.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragOffset({ x: clientX - rect.left, y: clientY - rect.top });
+    setDragging(true);
+  }
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    function onMove(e) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const ww = widgetRef.current?.offsetWidth || 360;
+      const wh = widgetRef.current?.offsetHeight || 520;
+      const nx = Math.max(0, Math.min(clientX - dragOffset.x, W - ww));
+      const ny = Math.max(0, Math.min(clientY - dragOffset.y, H - wh));
+      setPos({ x: nx, y: ny });
+    }
+
+    function onUp() {
+      setDragging(false);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, [dragging, dragOffset]);
 
   async function send() {
     const text = input.trim();
     if (!text || loading) return;
     setInput("");
-
     const userMsg = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    const next = [...messages, userMsg];
+    setMessages(next);
     setLoading(true);
-
     try {
-      const history = newMessages
+      const history = next
         .slice(1)
+        .slice(0, -1)
         .map((m) => ({ role: m.role, content: m.content }));
       const data = await api("/assistant/chat", {
         method: "POST",
-        body: JSON.stringify({ message: text, history: history.slice(0, -1) }),
+        body: JSON.stringify({ message: text, history }),
       });
       setMessages((prev) => [
         ...prev,
@@ -52,7 +95,7 @@ export default function AssistantWidget({ open, onClose }) {
         {
           role: "assistant",
           content:
-            "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+            "I'm having trouble connecting right now. Please try again in a moment.",
         },
       ]);
     } finally {
@@ -62,19 +105,40 @@ export default function AssistantWidget({ open, onClose }) {
 
   const SUGGESTIONS = [
     "How does escrow work?",
-    "Where is my order?",
     "How do I fund my wallet?",
     "What happens in a dispute?",
+    "Track my trade",
   ];
+
+  const defaultBottom = 80;
+  const defaultRight = 12;
+
+  const widgetStyle =
+    pos.x !== null
+      ? {
+          position: "fixed",
+          left: pos.x,
+          top: pos.y,
+          right: "auto",
+          bottom: "auto",
+        }
+      : {
+          position: "fixed",
+          bottom: defaultBottom,
+          right: defaultRight,
+          left: "auto",
+          top: "auto",
+        };
 
   if (!open) return null;
 
   return (
     <>
       <style>{`
-        @keyframes slideUp { from { opacity:0; transform:translateY(20px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }
-        @keyframes typingDot { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
-        .assistant-widget { animation: slideUp 0.25s ease-out; }
+        @keyframes assistantIn { from{opacity:0;transform:scale(0.92) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes dot1{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+        @keyframes dot2{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+        @keyframes dot3{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
       `}</style>
 
       <div
@@ -83,56 +147,67 @@ export default function AssistantWidget({ open, onClose }) {
           position: "fixed",
           inset: 0,
           zIndex: 800,
-          background: "rgba(0,0,0,0.4)",
-          backdropFilter: "blur(4px)",
+          background: "rgba(0,0,0,0.35)",
+          backdropFilter: "blur(3px)",
         }}
       />
 
       <div
-        className="assistant-widget"
+        ref={widgetRef}
         style={{
-          position: "fixed",
-          bottom: 80,
-          left: 12,
-          right: 12,
+          ...widgetStyle,
           zIndex: 801,
-          maxWidth: 420,
-          margin: "0 auto",
+          width: "min(380px, calc(100vw - 24px))",
+          height: "min(520px, 72vh)",
           background: T.surface,
           border: `1px solid ${T.border}`,
           borderRadius: 20,
           display: "flex",
           flexDirection: "column",
-          height: "min(520px, 70vh)",
           boxShadow: `0 24px 64px ${T.shadow}`,
           overflow: "hidden",
+          animation: "assistantIn 0.22s ease-out",
+          cursor: dragging ? "grabbing" : "default",
+          userSelect: "none",
         }}
       >
         <div
+          onMouseDown={onDragStart}
+          onTouchStart={onDragStart}
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
-            padding: "14px 16px",
+            padding: "12px 14px",
             borderBottom: `1px solid ${T.border}`,
-            background: T.name === "dark" ? "rgba(28,31,43,1)" : "#fff",
+            background: T.name === "dark" ? "#1C1F2B" : "#fff",
             flexShrink: 0,
+            cursor: "grab",
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: T.amberBg,
-              border: `1px solid ${T.amberBorder}`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 18,
-            }}
-          >
-            ✨
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <img
+              src="/logo.jpg"
+              alt="PaxeL"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                display: "block",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: -1,
+                right: -1,
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: T.jade,
+                border: `2px solid ${T.surface}`,
+              }}
+            />
           </div>
           <div style={{ flex: 1 }}>
             <div
@@ -145,28 +220,15 @@ export default function AssistantWidget({ open, onClose }) {
             >
               PaxeL Assistant
             </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: T.jade,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: T.jade,
-                }}
-              />
-              Online · Powered by AI
+            <div style={{ fontSize: 11, color: T.jade }}>
+              ● Online · Drag to move
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             style={{
               background: "none",
               border: "none",
@@ -174,6 +236,7 @@ export default function AssistantWidget({ open, onClose }) {
               cursor: "pointer",
               fontSize: 20,
               lineHeight: 1,
+              padding: 4,
             }}
           >
             ✕
@@ -184,7 +247,7 @@ export default function AssistantWidget({ open, onClose }) {
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "14px 14px 4px",
+            padding: "12px 12px 4px",
             display: "flex",
             flexDirection: "column",
             gap: 10,
@@ -201,22 +264,16 @@ export default function AssistantWidget({ open, onClose }) {
               }}
             >
               {m.role === "assistant" && (
-                <div
+                <img
+                  src="/logo.jpg"
+                  alt=""
                   style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: "50%",
-                    background: T.amberBg,
-                    border: `1px solid ${T.amberBorder}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 12,
+                    width: 22,
+                    height: 22,
+                    borderRadius: 6,
                     flexShrink: 0,
                   }}
-                >
-                  ✨
-                </div>
+                />
               )}
               <div
                 style={{
@@ -228,7 +285,7 @@ export default function AssistantWidget({ open, onClose }) {
                     m.role === "user"
                       ? "14px 14px 4px 14px"
                       : "14px 14px 14px 4px",
-                  padding: "10px 13px",
+                  padding: "9px 12px",
                   fontSize: 13,
                   lineHeight: 1.6,
                   whiteSpace: "pre-wrap",
@@ -241,22 +298,16 @@ export default function AssistantWidget({ open, onClose }) {
 
           {loading && (
             <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-              <div
+              <img
+                src="/logo.jpg"
+                alt=""
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  background: T.amberBg,
-                  border: `1px solid ${T.amberBorder}`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
                   flexShrink: 0,
                 }}
-              >
-                ✨
-              </div>
+              />
               <div
                 style={{
                   background: T.bg,
@@ -275,7 +326,7 @@ export default function AssistantWidget({ open, onClose }) {
                       height: 6,
                       borderRadius: "50%",
                       background: T.amber,
-                      animation: `typingDot 1.4s ease-in-out infinite`,
+                      animation: `dot${i + 1} 1.4s ease-in-out infinite`,
                       animationDelay: `${i * 0.16}s`,
                     }}
                   />
@@ -290,7 +341,8 @@ export default function AssistantWidget({ open, onClose }) {
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 6,
-                paddingLeft: 32,
+                paddingLeft: 30,
+                paddingTop: 4,
               }}
             >
               {SUGGESTIONS.map((s) => (
@@ -298,7 +350,7 @@ export default function AssistantWidget({ open, onClose }) {
                   key={s}
                   onClick={() => {
                     setInput(s);
-                    setTimeout(() => send(), 10);
+                    setTimeout(send, 50);
                   }}
                   style={{
                     background: T.amberBg,
@@ -322,7 +374,7 @@ export default function AssistantWidget({ open, onClose }) {
 
         <div
           style={{
-            padding: "10px 12px",
+            padding: "10px 10px",
             borderTop: `1px solid ${T.border}`,
             flexShrink: 0,
             display: "flex",
@@ -334,14 +386,14 @@ export default function AssistantWidget({ open, onClose }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-            placeholder="Ask me anything about your trades..."
+            placeholder="Ask anything about your trades..."
             style={{
               flex: 1,
               background: T.bg,
               color: T.text,
               border: `1px solid ${T.border}`,
-              borderRadius: 12,
-              padding: "10px 14px",
+              borderRadius: 10,
+              padding: "10px 12px",
               fontSize: 13,
               outline: "none",
               fontFamily: "'Inter',sans-serif",
@@ -353,7 +405,7 @@ export default function AssistantWidget({ open, onClose }) {
             style={{
               width: 40,
               height: 40,
-              borderRadius: 12,
+              borderRadius: 10,
               border: "none",
               background: input.trim() && !loading ? T.amber : T.border,
               color: input.trim() && !loading ? "#0A0A0F" : T.textDim,

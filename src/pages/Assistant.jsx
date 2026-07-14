@@ -139,10 +139,6 @@ export default function AssistantWidget({ open, onClose }) {
         @keyframes dot1{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
         @keyframes dot2{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
         @keyframes dot3{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
-        @keyframes widgetPulse {
-          0%, 100% { box-shadow: 0 24px 64px ${T.shadow}, 0 0 0 0 ${T.amber}55; }
-          50% { box-shadow: 0 24px 64px ${T.shadow}, 0 0 0 8px ${T.amber}00; }
-        }
       `}</style>
 
       <div
@@ -170,8 +166,7 @@ export default function AssistantWidget({ open, onClose }) {
           flexDirection: "column",
           boxShadow: `0 24px 64px ${T.shadow}`,
           overflow: "hidden",
-          animation:
-            "assistantIn 0.22s ease-out, widgetPulse 2.2s ease-in-out 0.3s infinite",
+          animation: "assistantIn 0.22s ease-out",
           cursor: dragging ? "grabbing" : "default",
           userSelect: "none",
         }}

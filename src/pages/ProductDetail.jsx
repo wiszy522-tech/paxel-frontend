@@ -9,7 +9,6 @@ import { api } from "../utils/api";
 function ImageGallery({ images }) {
   const { theme: T } = useTheme();
   const [active, setActive] = useState(0);
-
   if (!images?.length)
     return (
       <div
@@ -26,7 +25,6 @@ function ImageGallery({ images }) {
         📦
       </div>
     );
-
   return (
     <div>
       <div
@@ -73,91 +71,8 @@ function ImageGallery({ images }) {
   );
 }
 
-function SellerCard({ seller, reviews }) {
-  const { theme: T } = useTheme();
-  const navigate = useNavigate();
-  const avg = reviews?.avgRating;
-  const total = reviews?.total || 0;
-
-  return (
-    <Card style={{ marginBottom: 16 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 12,
-        }}
-      >
-        <Avatar name={seller?.name} photo={seller?.profilePhoto} size={44} />
-        <div>
-          <div style={{ fontWeight: 700, color: T.text, fontSize: 15 }}>
-            {seller?.name}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 6,
-              alignItems: "center",
-              marginTop: 2,
-            }}
-          >
-            {seller?.kycLevel >= 2 && (
-              <Badge variant="jade">✓ Verified Seller</Badge>
-            )}
-            {seller?.primaryTag && (
-              <Badge variant="muted">{seller.primaryTag}</Badge>
-            )}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 16 }}>
-        {avg && (
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                fontFamily: "'Syne', sans-serif",
-                fontWeight: 800,
-                fontSize: 20,
-                color: T.amber,
-              }}
-            >
-              ⭐ {avg}
-            </div>
-            <div style={{ fontSize: 11, color: T.textDim }}>
-              {total} reviews
-            </div>
-          </div>
-        )}
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800,
-              fontSize: 20,
-              color: T.text,
-            }}
-          >
-            {seller?.location?.state || "NG"}
-          </div>
-          <div style={{ fontSize: 11, color: T.textDim }}>Location</div>
-        </div>
-      </div>
-      <Button
-        variant="secondary"
-        fullWidth
-        style={{ marginTop: 12 }}
-        onClick={() => navigate(`/profile/${seller?._id}`)}
-      >
-        View seller profile
-      </Button>
-    </Card>
-  );
-}
-
 function TradeModal({ open, onClose, product, onSuccess }) {
   const { theme: T } = useTheme();
-  const { user } = useAuth();
   const [delivery, setDelivery] = useState("waybill");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -192,7 +107,7 @@ function TradeModal({ open, onClose, product, onSuccess }) {
         <div style={{ fontWeight: 600, color: T.text }}>{product?.title}</div>
         <div
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "'Syne',sans-serif",
             fontWeight: 800,
             fontSize: 22,
             color: T.amber,
@@ -202,7 +117,6 @@ function TradeModal({ open, onClose, product, onSuccess }) {
           ₦{product?.price?.toLocaleString()}
         </div>
       </div>
-
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: T.textDim, marginBottom: 8 }}>
           Delivery method
@@ -248,7 +162,6 @@ function TradeModal({ open, onClose, product, onSuccess }) {
           </div>
         ))}
       </div>
-
       <div
         style={{
           background: T.amberBg,
@@ -260,10 +173,8 @@ function TradeModal({ open, onClose, product, onSuccess }) {
           color: T.amber,
         }}
       >
-        🔒 Payment is held in escrow until you confirm receipt. Funds release
-        only when your goods arrive.
+        🔒 Payment is held in escrow until you confirm receipt.
       </div>
-
       {error && (
         <div
           style={{
@@ -279,7 +190,6 @@ function TradeModal({ open, onClose, product, onSuccess }) {
           {error}
         </div>
       )}
-
       <Button fullWidth onClick={handleCreate} loading={loading}>
         Lock ₦{product?.price?.toLocaleString()} in escrow
       </Button>
@@ -299,8 +209,8 @@ export default function ProductDetailPage({ onAssistant }) {
   const [tradeModal, setTradeModal] = useState(false);
 
   useEffect(() => {
-    Promise.all([api(`/products/${id}`)])
-      .then(([p]) => {
+    api(`/products/${id}`)
+      .then((p) => {
         setProduct(p.product);
         api(`/reviews/user/${p.product.seller._id}`)
           .then((r) => setReviews(r))
@@ -318,18 +228,18 @@ export default function ProductDetailPage({ onAssistant }) {
         </div>
       </Layout>
     );
-
   if (!product) return null;
 
-  const isMine = product.seller?._id === user?.id;
+  const sellerId = product.seller?._id || product.seller;
+  const isMine = sellerId === user?.id || sellerId === user?._id;
 
   return (
     <Layout onAssistant={onAssistant}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
-        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media(min-width: 640px) { .detail-grid { grid-template-columns: 1fr 1fr; } }
+        .detail-grid{display:grid;grid-template-columns:1fr;gap:20px}
+        @media(min-width:640px){.detail-grid{grid-template-columns:1fr 1fr}}
       `}</style>
 
       <button
@@ -344,7 +254,7 @@ export default function ProductDetailPage({ onAssistant }) {
           display: "flex",
           alignItems: "center",
           gap: 6,
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'Inter',sans-serif",
         }}
       >
         ← Back
@@ -354,7 +264,6 @@ export default function ProductDetailPage({ onAssistant }) {
         <div>
           <ImageGallery images={product.images} />
         </div>
-
         <div>
           <div
             style={{
@@ -377,9 +286,9 @@ export default function ProductDetailPage({ onAssistant }) {
 
           <h1
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Syne',sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(20px, 4vw, 28px)",
+              fontSize: "clamp(20px,4vw,28px)",
               color: T.text,
               marginBottom: 8,
               lineHeight: 1.2,
@@ -387,10 +296,9 @@ export default function ProductDetailPage({ onAssistant }) {
           >
             {product.title}
           </h1>
-
           <div
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "'Syne',sans-serif",
               fontWeight: 800,
               fontSize: 32,
               color: T.amber,
@@ -399,7 +307,6 @@ export default function ProductDetailPage({ onAssistant }) {
           >
             ₦{product.price?.toLocaleString()}
           </div>
-
           <div
             style={{
               fontSize: 14,
@@ -411,123 +318,146 @@ export default function ProductDetailPage({ onAssistant }) {
             {product.description}
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              marginBottom: 20,
-              flexWrap: "wrap",
-            }}
-          >
+          {isMine ? (
             <div
               style={{
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontSize: 13,
-                color: T.textDim,
+                background: T.amberBg,
+                border: `1px solid ${T.amberBorder}`,
+                borderRadius: 12,
+                padding: "14px 16px",
+                marginBottom: 16,
               }}
             >
-              📦 Qty: {product.quantity}
-            </div>
-            <div
-              style={{
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontSize: 13,
-                color: T.textDim,
-              }}
-            >
-              👁️ {product.views} views
-            </div>
-          </div>
-
-          {!isMine ? (
-            <Button fullWidth size="lg" onClick={() => setTradeModal(true)}>
-              🔒 Buy securely with escrow
-            </Button>
-          ) : (
-            <div style={{ display: "flex", gap: 8 }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: T.amber,
+                  fontSize: 14,
+                  marginBottom: 4,
+                }}
+              >
+                🏪 This is your listing
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 12 }}>
+                Buyers will see the order button. You'll be notified when
+                someone places a trade.
+              </div>
               <Button
                 variant="secondary"
-                fullWidth
+                size="sm"
                 onClick={() => navigate(`/products/${id}/edit`)}
               >
                 Edit listing
               </Button>
             </div>
+          ) : (
+            <Button fullWidth size="lg" onClick={() => setTradeModal(true)}>
+              🔒 Buy securely with escrow
+            </Button>
           )}
 
           <div style={{ marginTop: 20 }}>
-            <SellerCard seller={product.seller} reviews={reviews} />
-          </div>
-
-          {reviews?.reviews?.length > 0 && (
-            <div style={{ marginTop: 4 }}>
+            <Card style={{ marginBottom: 12 }}>
               <div
                 style={{
-                  fontFamily: "'Syne', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: T.text,
-                  marginBottom: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  marginBottom: 10,
                 }}
               >
-                Reviews ({reviews.total})
+                <Avatar
+                  name={product.seller?.name}
+                  photo={product.seller?.profilePhoto}
+                  size={40}
+                />
+                <div>
+                  <div style={{ fontWeight: 700, color: T.text }}>
+                    {product.seller?.name}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                    {product.seller?.kycLevel >= 2 && (
+                      <Badge variant="jade">✓ Verified</Badge>
+                    )}
+                  </div>
+                </div>
               </div>
-              {reviews.reviews.slice(0, 3).map((r, i) => (
+              {reviews?.avgRating && (
+                <div style={{ fontSize: 13, color: T.textDim }}>
+                  ⭐ {reviews.avgRating} · {reviews.total} reviews
+                </div>
+              )}
+              <Button
+                variant="secondary"
+                fullWidth
+                style={{ marginTop: 10 }}
+                onClick={() => navigate(`/profile/${sellerId}`)}
+              >
+                View seller profile
+              </Button>
+            </Card>
+
+            {reviews?.reviews?.length > 0 && (
+              <div>
                 <div
-                  key={i}
                   style={{
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 12,
-                    padding: "12px 14px",
+                    fontFamily: "'Syne',sans-serif",
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: T.text,
                     marginBottom: 10,
                   }}
                 >
+                  Reviews
+                </div>
+                {reviews.reviews.slice(0, 3).map((r, i) => (
                   <div
+                    key={i}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 6,
+                      background: T.surface,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: 10,
+                      padding: "12px",
+                      marginBottom: 8,
                     }}
                   >
-                    <Avatar
-                      name={r.reviewer?.name}
-                      photo={r.reviewer?.profilePhoto}
-                      size={28}
-                    />
-                    <span
-                      style={{ fontSize: 13, fontWeight: 600, color: T.text }}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 4,
+                      }}
                     >
-                      {r.reviewer?.name}
-                    </span>
-                    <span style={{ fontSize: 12, color: T.amber }}>
-                      {"★".repeat(r.rating)}
-                      {"☆".repeat(5 - r.rating)}
-                    </span>
+                      <Avatar name={r.reviewer?.name} size={24} />
+                      <span
+                        style={{ fontSize: 13, fontWeight: 600, color: T.text }}
+                      >
+                        {r.reviewer?.name}
+                      </span>
+                      <span style={{ fontSize: 12, color: T.amber }}>
+                        {"★".repeat(r.rating)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: T.textDim }}>
+                      {r.comment}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 13, color: T.textDim }}>
-                    {r.comment}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <TradeModal
-        open={tradeModal}
-        onClose={() => setTradeModal(false)}
-        product={product}
-        onSuccess={(code) => navigate(`/trades/${code}`)}
-      />
+      {!isMine && (
+        <TradeModal
+          open={tradeModal}
+          onClose={() => setTradeModal(false)}
+          product={product}
+          onSuccess={(code) => navigate(`/trades/${code}`)}
+        />
+      )}
     </Layout>
   );
 }

@@ -4,9 +4,8 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { Layout } from "../components/Layout";
 import { Button, Badge, Spinner, Modal, Avatar } from "../components/UI";
-import { api } from "../utils/api";
+import { api, BASE_URL } from "../utils/api";
 import { io } from "socket.io-client";
-import { BASE_URL } from "../utils/api";
 
 const STATE_CONFIG = {
   CREATED: { label: "Awaiting Payment", color: null, icon: "📝" },
@@ -17,32 +16,9 @@ const STATE_CONFIG = {
   DISPUTED: { label: "Disputed", color: "#C1502E", icon: "⚠️" },
 };
 
-function TradeStamp({ state }) {
-  const { theme: T } = useTheme();
-  const cfg = STATE_CONFIG[state] || STATE_CONFIG.CREATED;
-  return (
-    <div
-      style={{
-        border: `2px solid ${cfg.color || T.border}`,
-        color: cfg.color || T.textDim,
-        borderRadius: 10,
-        padding: "10px 16px",
-        textAlign: "center",
-        fontFamily: "'Syne', sans-serif",
-        fontWeight: 800,
-        fontSize: 15,
-        letterSpacing: "0.06em",
-        transition: "all 0.3s",
-      }}
-    >
-      {cfg.icon} {cfg.label}
-    </div>
-  );
-}
-
 function WaybillForm({ tradeCode, onDone }) {
   const { theme: T } = useTheme();
-  const inputRef = useRef();
+  const photoRef = useRef();
   const [busCompany, setBusCompany] = useState("");
   const [driverName, setDriverName] = useState("");
   const [driverPhone, setDriverPhone] = useState("");
@@ -52,38 +28,33 @@ function WaybillForm({ tradeCode, onDone }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  function handlePhoto(e) {
+    const f = e.target.files[0];
+    if (f) {
+      setPhoto(f);
+      setPreview(URL.createObjectURL(f));
+    }
+  }
+
   async function submit(e) {
     e.preventDefault();
-    if (!photo) {
-      setError("Live photo required");
+    if (!driverName || !driverPhone || !busNumber) {
+      setError("Driver name, phone and bus number are required");
       return;
     }
     setError("");
     setLoading(true);
     try {
-      const form = new FormData();
-      form.append("busCompany", busCompany);
-      form.append("driverName", driverName);
-      form.append("driverPhone", driverPhone);
-      form.append("busNumber", busNumber);
-      form.append("dispatchPhoto", photo);
-      const token = localStorage.getItem("paxel_token");
-      const res = await fetch(`${BASE_URL}/trades/${tradeCode}/waybill`, {
+      await api(`/trades/${tradeCode}/waybill`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           busCompany,
           driverName,
           driverPhone,
           busNumber,
-          dispatchPhotoUrl: preview,
+          dispatchPhotoUrl: preview || "pending",
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
       onDone();
     } catch (err) {
       setError(err.message);
@@ -109,87 +80,138 @@ function WaybillForm({ tradeCode, onDone }) {
     <form onSubmit={submit}>
       <div
         style={{
-          fontFamily: "'Syne',sans-serif",
-          fontWeight: 700,
-          fontSize: 16,
-          color: T.text,
-          marginBottom: 14,
+          background: T.amberBg,
+          border: `1px solid ${T.amberBorder}`,
+          borderRadius: 10,
+          padding: "12px 14px",
+          marginBottom: 16,
+          fontSize: 13,
+          color: T.amber,
         }}
       >
-        Log Waybill Details
+        🚌 Fill in the transport details so the buyer knows their goods are on
+        the way.
       </div>
+
+      <label
+        style={{
+          fontSize: 12,
+          color: T.textDim,
+          display: "block",
+          marginBottom: 4,
+        }}
+      >
+        Transport company
+      </label>
       <input
-        placeholder="Transport company (e.g. Peace Mass Transit)"
         value={busCompany}
         onChange={(e) => setBusCompany(e.target.value)}
+        placeholder="e.g. Peace Mass Transit, GUO, ABC"
         style={inputStyle}
       />
+
+      <label
+        style={{
+          fontSize: 12,
+          color: T.textDim,
+          display: "block",
+          marginBottom: 4,
+        }}
+      >
+        Driver name *
+      </label>
       <input
-        placeholder="Driver name"
         value={driverName}
         onChange={(e) => setDriverName(e.target.value)}
-        style={inputStyle}
-        required
-      />
-      <input
-        placeholder="Driver phone number"
-        value={driverPhone}
-        onChange={(e) => setDriverPhone(e.target.value)}
-        style={inputStyle}
-        required
-      />
-      <input
-        placeholder="Bus / waybill number (e.g. PMT 1001)"
-        value={busNumber}
-        onChange={(e) => setBusNumber(e.target.value)}
+        placeholder="e.g. Emeka Obi"
         style={inputStyle}
         required
       />
 
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 12, color: T.textDim, marginBottom: 6 }}>
-          Live photo of wrapped parcel (gallery blocked)
-        </div>
+      <label
+        style={{
+          fontSize: 12,
+          color: T.textDim,
+          display: "block",
+          marginBottom: 4,
+        }}
+      >
+        Driver phone number *
+      </label>
+      <input
+        value={driverPhone}
+        onChange={(e) => setDriverPhone(e.target.value)}
+        placeholder="e.g. 08012345678"
+        style={inputStyle}
+        required
+      />
+
+      <label
+        style={{
+          fontSize: 12,
+          color: T.textDim,
+          display: "block",
+          marginBottom: 4,
+        }}
+      >
+        Bus / waybill number *
+      </label>
+      <input
+        value={busNumber}
+        onChange={(e) => setBusNumber(e.target.value)}
+        placeholder="e.g. PMT 1001"
+        style={inputStyle}
+        required
+      />
+
+      <div style={{ marginBottom: 16 }}>
+        <label
+          style={{
+            fontSize: 12,
+            color: T.textDim,
+            display: "block",
+            marginBottom: 6,
+          }}
+        >
+          Live photo of wrapped parcel (optional but recommended)
+        </label>
         <input
-          ref={inputRef}
+          ref={photoRef}
           type="file"
           accept="image/*"
           capture="environment"
           style={{ display: "none" }}
-          onChange={(e) => {
-            const f = e.target.files[0];
-            if (f) {
-              setPhoto(f);
-              setPreview(URL.createObjectURL(f));
-            }
-          }}
+          onChange={handlePhoto}
         />
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => photoRef.current?.click()}
           style={{
             width: "100%",
-            border: `2px dashed ${T.border}`,
+            border: `2px dashed ${preview ? T.jade : T.border}`,
             background: T.bg,
-            color: T.textDim,
+            color: preview ? T.jade : T.textDim,
             borderRadius: 10,
-            padding: "12px",
+            padding: "14px",
             cursor: "pointer",
             fontSize: 14,
             fontFamily: "'Inter',sans-serif",
+            textAlign: "center",
           }}
         >
-          {preview ? "✓ Photo taken — tap to retake" : "📷 Take live photo"}
+          {preview
+            ? "✓ Photo taken — tap to retake"
+            : "📷 Take live photo of parcel"}
         </button>
         {preview && (
           <img
             src={preview}
-            alt=""
+            alt="parcel"
             style={{
               width: "100%",
               borderRadius: 10,
               marginTop: 8,
-              border: `1px solid ${T.border}`,
+              border: `1px solid ${T.jade}`,
             }}
           />
         )}
@@ -210,8 +232,9 @@ function WaybillForm({ tradeCode, onDone }) {
           {error}
         </div>
       )}
+
       <Button type="submit" fullWidth loading={loading}>
-        Confirm dispatch
+        Confirm dispatch → notify buyer
       </Button>
     </form>
   );
@@ -247,8 +270,10 @@ function ChatPanel({ tradeCode }) {
     setText("");
   }
 
+  const myId = user?.id || user?._id;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: 320 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: 300 }}>
       <div
         style={{
           fontFamily: "'Syne',sans-serif",
@@ -268,7 +293,6 @@ function ChatPanel({ tradeCode }) {
           flexDirection: "column",
           gap: 8,
           marginBottom: 10,
-          paddingRight: 4,
         }}
       >
         {messages.length === 0 && (
@@ -277,14 +301,15 @@ function ChatPanel({ tradeCode }) {
               fontSize: 13,
               color: T.textMuted,
               textAlign: "center",
-              paddingTop: 20,
+              paddingTop: 24,
             }}
           >
             No messages yet. Start the conversation.
           </div>
         )}
         {messages.map((m, i) => {
-          const mine = m.sender?._id === user?.id || m.sender === user?.id;
+          const senderId = m.sender?._id || m.sender;
+          const mine = senderId === myId;
           return (
             <div
               key={i}
@@ -344,12 +369,17 @@ function ChatPanel({ tradeCode }) {
         <button
           onClick={send}
           style={{
-            background: T.amber,
-            border: "none",
-            borderRadius: 10,
             width: 42,
+            height: 42,
+            borderRadius: 10,
+            border: "none",
+            background: T.amber,
+            color: "#0A0A0F",
             cursor: "pointer",
             fontSize: 18,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           ➤
@@ -364,13 +394,13 @@ export default function TradeDetailPage({ onAssistant }) {
   const { code } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const receiptRef = useRef();
 
   const [trade, setTrade] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [waybillModal, setWaybillModal] = useState(false);
   const [error, setError] = useState("");
-  const receiptRef = useRef();
 
   const reload = () =>
     api(`/trades/${code}`)
@@ -407,9 +437,13 @@ export default function TradeDetailPage({ onAssistant }) {
     );
   if (!trade) return null;
 
-  const isBuyer = trade.buyer?._id === user?.id || trade.buyer === user?.id;
-  const isSeller = trade.seller?._id === user?.id || trade.seller === user?.id;
+  const myId = user?.id || user?._id;
+  const buyerId = trade.buyer?._id || trade.buyer;
+  const sellerId = trade.seller?._id || trade.seller;
+  const isBuyer = buyerId === myId;
+  const isSeller = sellerId === myId;
   const other = isBuyer ? trade.seller : trade.buyer;
+  const cfg = STATE_CONFIG[trade.state] || STATE_CONFIG.CREATED;
 
   return (
     <Layout onAssistant={onAssistant}>
@@ -441,7 +475,7 @@ export default function TradeDetailPage({ onAssistant }) {
           background: T.surface,
           border: `1px solid ${T.border}`,
           borderRadius: 16,
-          padding: "20px",
+          padding: 20,
           marginBottom: 16,
         }}
       >
@@ -489,20 +523,34 @@ export default function TradeDetailPage({ onAssistant }) {
               ₦{trade.amount?.toLocaleString()}
             </div>
             <div style={{ fontSize: 11, color: T.textDim }}>
-              Fee: ₦{trade.fee?.toLocaleString()} · Net: ₦
+              Fee ₦{trade.fee?.toLocaleString()} · Net ₦
               {trade.netAmount?.toLocaleString()}
             </div>
           </div>
         </div>
 
-        <TradeStamp state={trade.state} />
+        <div
+          style={{
+            border: `2px solid ${cfg.color || T.border}`,
+            color: cfg.color || T.textDim,
+            borderRadius: 10,
+            padding: "10px 16px",
+            textAlign: "center",
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 800,
+            fontSize: 14,
+            letterSpacing: "0.06em",
+            marginBottom: 14,
+          }}
+        >
+          {cfg.icon} {cfg.label}
+        </div>
 
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            marginTop: 14,
-            paddingTop: 14,
+            paddingTop: 12,
             borderTop: `1px solid ${T.border}`,
           }}
         >
@@ -517,17 +565,80 @@ export default function TradeDetailPage({ onAssistant }) {
               </div>
             </div>
           </div>
-          <Badge variant="muted">{trade.deliveryMethod}</Badge>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <Badge variant="muted">
+              {isBuyer ? "You're buying" : "You're selling"}
+            </Badge>
+            <Badge variant="muted">{trade.deliveryMethod}</Badge>
+          </div>
         </div>
       </div>
 
-      {trade.waybill?.driverName && (
+      {isSeller && trade.state === "SECURED" && (
         <div
           style={{
             background: T.amberBg,
             border: `1px solid ${T.amberBorder}`,
-            borderRadius: 12,
-            padding: "14px 16px",
+            borderRadius: 14,
+            padding: 20,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Syne',sans-serif",
+              fontWeight: 800,
+              fontSize: 16,
+              color: T.amber,
+              marginBottom: 6,
+            }}
+          >
+            🚌 Action required: Dispatch goods
+          </div>
+          <div style={{ fontSize: 13, color: T.textDim, marginBottom: 14 }}>
+            The buyer's payment is locked in escrow. Log your waybill details
+            and dispatch the goods to unlock payment on confirmed delivery.
+          </div>
+          <Button fullWidth onClick={() => setWaybillModal(true)}>
+            Log waybill & mark as dispatched
+          </Button>
+        </div>
+      )}
+
+      {isSeller && trade.state === "DISPATCHED" && (
+        <div
+          style={{
+            background: T.jadeBg,
+            border: `1px solid ${T.jadeBorder}`,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 600,
+              color: T.jade,
+              fontSize: 14,
+              marginBottom: 4,
+            }}
+          >
+            ✅ Goods dispatched
+          </div>
+          <div style={{ fontSize: 13, color: T.textDim }}>
+            Waiting for buyer to confirm receipt. Payment releases automatically
+            after 24 hours if no action is taken.
+          </div>
+        </div>
+      )}
+
+      {trade.waybill?.driverName && (
+        <div
+          style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: 14,
+            padding: "16px",
             marginBottom: 16,
           }}
         >
@@ -535,45 +646,197 @@ export default function TradeDetailPage({ onAssistant }) {
             style={{
               fontFamily: "'Syne',sans-serif",
               fontWeight: 700,
-              color: T.amber,
-              fontSize: 13,
-              marginBottom: 8,
+              color: T.text,
+              fontSize: 14,
+              marginBottom: 10,
             }}
           >
             🚌 Waybill Details
           </div>
           <div
             style={{
-              fontSize: 13,
-              color: T.text,
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: 6,
+              gap: 8,
+              fontSize: 13,
             }}
           >
             {trade.waybill.busCompany && (
               <div>
                 <span style={{ color: T.textDim }}>Company: </span>
-                {trade.waybill.busCompany}
+                <span style={{ color: T.text }}>
+                  {trade.waybill.busCompany}
+                </span>
               </div>
             )}
             <div>
               <span style={{ color: T.textDim }}>Bus: </span>
-              {trade.waybill.busNumber}
+              <span style={{ color: T.text }}>{trade.waybill.busNumber}</span>
             </div>
             <div>
               <span style={{ color: T.textDim }}>Driver: </span>
-              {trade.waybill.driverName}
+              <span style={{ color: T.text }}>{trade.waybill.driverName}</span>
             </div>
             <div>
               <span style={{ color: T.textDim }}>Phone: </span>
               <a
                 href={`tel:${trade.waybill.driverPhone}`}
-                style={{ color: T.amber }}
+                style={{ color: T.amber, textDecoration: "none" }}
               >
                 {trade.waybill.driverPhone}
               </a>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isBuyer && trade.state === "DISPATCHED" && (
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              background: T.jadeBg,
+              border: `1px solid ${T.jadeBorder}`,
+              borderRadius: 10,
+              padding: "12px 14px",
+              marginBottom: 12,
+              fontSize: 13,
+              color: T.jade,
+            }}
+          >
+            📦 Your goods are on the way! When they arrive, take a live photo
+            and confirm receipt to release payment to the seller.
+          </div>
+          <input
+            ref={receiptRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const f = e.target.files[0];
+              if (!f) return;
+              const url = URL.createObjectURL(f);
+              await doAction("confirm-receipt", { receiptPhotoUrl: url });
+            }}
+          />
+          <Button
+            fullWidth
+            variant="jade"
+            onClick={() => receiptRef.current?.click()}
+            loading={actionLoading}
+          >
+            📷 Take photo & confirm receipt
+          </Button>
+          <div style={{ marginTop: 8 }}>
+            <Button
+              fullWidth
+              variant="secondary"
+              onClick={() =>
+                doAction("dispute", {
+                  reason: "Goods not received as expected",
+                })
+              }
+              loading={actionLoading}
+            >
+              ⚠️ Raise a dispute
+            </Button>
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: T.textMuted,
+              textAlign: "center",
+              marginTop: 8,
+            }}
+          >
+            ⚠️ Only confirm receipt after physically receiving your goods. Per
+            T&Cs, no refunds after confirmation.
+          </div>
+        </div>
+      )}
+
+      {isBuyer && trade.state === "SECURED" && (
+        <div
+          style={{
+            background: T.amberBg,
+            border: `1px solid ${T.amberBorder}`,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 600,
+              color: T.amber,
+              fontSize: 14,
+              marginBottom: 4,
+            }}
+          >
+            🔒 Payment secured in escrow
+          </div>
+          <div style={{ fontSize: 13, color: T.textDim }}>
+            Waiting for seller to dispatch goods and log waybill details.
+          </div>
+        </div>
+      )}
+
+      {trade.state === "RELEASED" && (
+        <div
+          style={{
+            background: T.jadeBg,
+            border: `1px solid ${T.jadeBorder}`,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 600,
+              color: T.jade,
+              fontSize: 14,
+              marginBottom: 4,
+            }}
+          >
+            ✅ Trade complete
+          </div>
+          {isBuyer && (
+            <Button
+              variant="ghost"
+              fullWidth
+              style={{ marginTop: 8 }}
+              onClick={() => navigate(`/reviews/new?trade=${trade.tradeCode}`)}
+            >
+              ⭐ Leave a review
+            </Button>
+          )}
+        </div>
+      )}
+
+      {trade.state === "DISPUTED" && (
+        <div
+          style={{
+            background: T.rustBg,
+            border: `1px solid ${T.rustBorder}`,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 16,
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 600,
+              color: T.rust,
+              fontSize: 14,
+              marginBottom: 4,
+            }}
+          >
+            ⚠️ Dispute raised
+          </div>
+          <div style={{ fontSize: 13, color: T.textDim }}>
+            Funds are frozen. Our team is reviewing the evidence. You'll be
+            notified of the resolution.
           </div>
         </div>
       )}
@@ -596,84 +859,10 @@ export default function TradeDetailPage({ onAssistant }) {
 
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          marginBottom: 16,
-        }}
-      >
-        {isSeller && trade.state === "SECURED" && (
-          <Button fullWidth onClick={() => setWaybillModal(true)}>
-            🚌 Log waybill & dispatch
-          </Button>
-        )}
-        {isBuyer && trade.state === "DISPATCHED" && (
-          <>
-            <div
-              style={{
-                background: T.jadeBg,
-                border: `1px solid ${T.jadeBorder}`,
-                borderRadius: 10,
-                padding: "10px 14px",
-                fontSize: 13,
-                color: T.jade,
-              }}
-            >
-              📦 Goods dispatched! Take a live photo when your package arrives
-              to confirm receipt and release payment.
-            </div>
-            <input
-              ref={receiptRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              style={{ display: "none" }}
-              onChange={async (e) => {
-                const f = e.target.files[0];
-                if (!f) return;
-                const url = URL.createObjectURL(f);
-                await doAction("confirm-receipt", { receiptPhotoUrl: url });
-              }}
-            />
-            <Button
-              fullWidth
-              variant="jade"
-              onClick={() => receiptRef.current?.click()}
-              loading={actionLoading}
-            >
-              📷 Take photo & confirm receipt
-            </Button>
-            <Button
-              fullWidth
-              variant="secondary"
-              onClick={() =>
-                doAction("dispute", {
-                  reason: "Goods not received as expected",
-                })
-              }
-              loading={actionLoading}
-            >
-              ⚠️ Raise a dispute
-            </Button>
-          </>
-        )}
-        {trade.state === "RELEASED" && isBuyer && (
-          <Button
-            fullWidth
-            variant="ghost"
-            onClick={() => navigate(`/reviews/new?trade=${trade.tradeCode}`)}
-          >
-            ⭐ Leave a review
-          </Button>
-        )}
-      </div>
-
-      <div
-        style={{
           background: T.surface,
           border: `1px solid ${T.border}`,
           borderRadius: 16,
-          padding: "16px",
+          padding: 16,
           marginBottom: 16,
         }}
       >

@@ -56,32 +56,17 @@ const STATES = [
 
 const KYC_LEVELS = [
   {
-    level: 0,
-    label: "Unverified",
-    desc: "Email registered",
-    icon: "📧",
-    color: null,
-  },
-  {
     level: 1,
     label: "Profile Complete",
     desc: "Name, phone & address added",
     icon: "👤",
-    color: "#F2A93B",
   },
-  {
-    level: 2,
-    label: "ID Submitted",
-    desc: "BVN or NIN provided",
-    icon: "🪪",
-    color: "#F2A93B",
-  },
+  { level: 2, label: "ID Submitted", desc: "BVN or NIN provided", icon: "🪪" },
   {
     level: 3,
     label: "Fully Verified",
-    desc: "ID + selfie confirmed",
+    desc: "ID verified by Didit",
     icon: "✅",
-    color: "#3FA66B",
   },
 ];
 
@@ -98,7 +83,7 @@ function KYCProgress({ level }) {
           marginBottom: 12,
         }}
       >
-        Verification Level
+        Verification Level {level}/3
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
         {[1, 2, 3].map((l) => (
@@ -115,7 +100,7 @@ function KYCProgress({ level }) {
         ))}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {KYC_LEVELS.slice(1).map((k) => (
+        {KYC_LEVELS.map((k) => (
           <div
             key={k.level}
             style={{
@@ -130,13 +115,8 @@ function KYCProgress({ level }) {
                 width: 32,
                 height: 32,
                 borderRadius: "50%",
-                background:
-                  k.level <= level
-                    ? k.color === "#3FA66B"
-                      ? "rgba(63,166,107,0.15)"
-                      : "rgba(242,169,59,0.15)"
-                    : T.surface,
-                border: `1px solid ${k.level <= level ? k.color || T.amber : T.border}`,
+                background: k.level <= level ? T.amberBg : T.surface,
+                border: `1px solid ${k.level <= level ? T.amber : T.border}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -144,7 +124,7 @@ function KYCProgress({ level }) {
                 flexShrink: 0,
               }}
             >
-              {k.icon}
+              {k.level <= level ? "✓" : k.icon}
             </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: T.text }}>
@@ -154,11 +134,7 @@ function KYCProgress({ level }) {
             </div>
             {k.level <= level && (
               <span
-                style={{
-                  marginLeft: "auto",
-                  color: k.color || T.amber,
-                  fontSize: 14,
-                }}
+                style={{ marginLeft: "auto", color: T.amber, fontSize: 14 }}
               >
                 ✓
               </span>
@@ -240,16 +216,20 @@ function EditProfileModal({ open, onClose, profile, onSave }) {
             Primary tag
           </label>
           <div style={{ display: "flex", gap: 8 }}>
-            {["buyer", "seller", "rider"].map((t) => (
+            {[
+              { v: "buyer", icon: "🛒" },
+              { v: "seller", icon: "🏪" },
+              { v: "rider", icon: "🛵" },
+            ].map((t) => (
               <button
-                key={t}
+                key={t.v}
                 type="button"
-                onClick={() => setPrimaryTag(t)}
+                onClick={() => setPrimaryTag(t.v)}
                 style={{
                   flex: 1,
-                  border: `1px solid ${primaryTag === t ? T.amber : T.border}`,
-                  background: primaryTag === t ? T.amberBg : "transparent",
-                  color: primaryTag === t ? T.amber : T.textDim,
+                  border: `1px solid ${primaryTag === t.v ? T.amber : T.border}`,
+                  background: primaryTag === t.v ? T.amberBg : "transparent",
+                  color: primaryTag === t.v ? T.amber : T.textDim,
                   borderRadius: 8,
                   padding: "9px 0",
                   fontSize: 12,
@@ -258,7 +238,7 @@ function EditProfileModal({ open, onClose, profile, onSave }) {
                   fontFamily: "'Inter',sans-serif",
                 }}
               >
-                {t === "buyer" ? "🛒" : t === "seller" ? "🏪" : "🛵"} {t}
+                {t.icon} {t.v}
               </button>
             ))}
           </div>
@@ -315,37 +295,209 @@ function EditProfileModal({ open, onClose, profile, onSave }) {
   );
 }
 
-function KYCModal({ open, onClose }) {
+function KYCModal({ open, onClose, currentLevel, onDone }) {
   const { theme: T } = useTheme();
+
+  if (currentLevel < 1) {
+    return (
+      <Modal open={open} onClose={onClose} title="Complete your profile first">
+        <div
+          style={{
+            fontSize: 14,
+            color: T.textDim,
+            lineHeight: 1.7,
+            marginBottom: 20,
+          }}
+        >
+          Please complete your profile (name, phone, state) before starting
+          identity verification.
+        </div>
+        <Button fullWidth onClick={onClose}>
+          Got it
+        </Button>
+      </Modal>
+    );
+  }
+
+  if (currentLevel === 1) {
+    return <SubmitIDModal open={open} onClose={onClose} onDone={onDone} />;
+  }
+
+  return <DiditVerifyModal open={open} onClose={onClose} onDone={onDone} />;
+}
+
+function SubmitIDModal({ open, onClose, onDone }) {
+  const { theme: T } = useTheme();
+  const [nin, setNin] = useState("");
+  const [bvn, setBvn] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function startVerification() {
+  async function submit(e) {
+    e.preventDefault();
+    if (!nin && !bvn) {
+      setError("Please enter at least NIN or BVN");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
-      const data = await api("/kyc/didit/start", { method: "POST" });
-      window.location.href = data.sessionUrl;
+      const form = new FormData();
+      if (nin) form.append("nin", nin);
+      if (bvn) form.append("bvn", bvn);
+      await apiForm("/profile/kyc", form);
+      onDone();
+      onClose();
     } catch (err) {
       setError(err.message);
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Verify your identity">
+    <Modal open={open} onClose={onClose} title="Step 2 — Submit ID">
       <div
         style={{
           fontSize: 13,
           color: T.textDim,
-          marginBottom: 20,
           lineHeight: 1.6,
+          marginBottom: 16,
         }}
       >
-        We use <strong style={{ color: T.amber }}>Didit</strong> to verify your
-        identity. You'll be redirected to a secure page to submit your ID and a
-        selfie, then brought back here automatically once you're done.
+        Provide your NIN or BVN to advance to Level 2. Full document
+        verification (Level 3) uses Didit's secure platform.
       </div>
+      <form onSubmit={submit}>
+        <Input
+          label="NIN (National ID Number)"
+          value={nin}
+          onChange={setNin}
+          placeholder="12345678901"
+          hint="Either NIN or BVN required"
+        />
+        <Input
+          label="BVN (Bank Verification Number)"
+          value={bvn}
+          onChange={setBvn}
+          placeholder="12345678901"
+        />
+        {error && (
+          <div
+            style={{
+              background: T.rustBg,
+              border: `1px solid ${T.rustBorder}`,
+              borderRadius: 8,
+              padding: "10px 14px",
+              marginBottom: 12,
+              fontSize: 13,
+              color: T.rust,
+            }}
+          >
+            {error}
+          </div>
+        )}
+        <Button type="submit" fullWidth loading={loading}>
+          Submit ID details
+        </Button>
+      </form>
+    </Modal>
+  );
+}
+
+function DiditVerifyModal({ open, onClose, onDone }) {
+  const { theme: T } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function startDidit() {
+    setError("");
+    setLoading(true);
+    try {
+      const data = await api("/kyc/didit/start", { method: "POST" });
+      if (data.sessionUrl) {
+        window.location.href = data.sessionUrl;
+      } else {
+        setError("Could not start verification session. Please try again.");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Step 3 — Identity Verification">
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🪪</div>
+        <div
+          style={{
+            fontFamily: "'Syne',sans-serif",
+            fontWeight: 700,
+            fontSize: 16,
+            color: T.text,
+            marginBottom: 8,
+          }}
+        >
+          Verify with Didit
+        </div>
+        <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.7 }}>
+          You'll be redirected to Didit's secure verification platform. The
+          process takes about 2 minutes.
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          marginBottom: 20,
+        }}
+      >
+        {[
+          {
+            icon: "📄",
+            text: "Upload a government-issued ID (NIN card, passport, driver's licence, PVC)",
+          },
+          { icon: "🤳", text: "Take a quick selfie for face matching" },
+          {
+            icon: "✅",
+            text: "Didit verifies and sends the result back instantly",
+          },
+        ].map((s, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+              fontSize: 13,
+              color: T.textDim,
+            }}
+          >
+            <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+            <span>{s.text}</span>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          background: T.amberBg,
+          border: `1px solid ${T.amberBorder}`,
+          borderRadius: 10,
+          padding: "10px 14px",
+          marginBottom: 16,
+          fontSize: 12,
+          color: T.amber,
+        }}
+      >
+        🔒 Your data is processed securely by Didit and never stored on PaxeL's
+        servers.
+      </div>
+
       {error && (
         <div
           style={{
@@ -361,8 +513,17 @@ function KYCModal({ open, onClose }) {
           {error}
         </div>
       )}
-      <Button fullWidth loading={loading} onClick={startVerification}>
-        🪪 Start verification
+
+      <Button fullWidth loading={loading} onClick={startDidit}>
+        Start verification on Didit →
+      </Button>
+      <Button
+        variant="secondary"
+        fullWidth
+        style={{ marginTop: 8 }}
+        onClick={onClose}
+      >
+        I'll do this later
       </Button>
     </Modal>
   );
@@ -375,7 +536,7 @@ export default function ProfilePage({ onAssistant }) {
   const navigate = useNavigate();
   const photoRef = useRef();
 
-  const isMe = !userId || userId === authUser?.id;
+  const isMe = !userId || userId === authUser?.id || userId === authUser?._id;
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -387,9 +548,8 @@ export default function ProfilePage({ onAssistant }) {
     const endpoint = isMe ? "/profile" : `/profile/${userId}`;
     api(endpoint)
       .then((d) => {
-        const p = d.user;
-        setProfile(p);
-        api(`/reviews/user/${p._id}`)
+        setProfile(d.user);
+        api(`/reviews/user/${d.user._id}`)
           .then((r) => setReviews(r))
           .catch(() => {});
       })
@@ -413,6 +573,15 @@ export default function ProfilePage({ onAssistant }) {
     }
   }
 
+  function refreshProfile() {
+    api(isMe ? "/profile" : `/profile/${userId}`)
+      .then((d) => {
+        setProfile(d.user);
+        if (isMe) updateUser(d.user);
+      })
+      .catch(() => {});
+  }
+
   if (loading)
     return (
       <Layout onAssistant={onAssistant}>
@@ -429,14 +598,13 @@ export default function ProfilePage({ onAssistant }) {
       : profile.primaryTag === "rider"
         ? "🛵"
         : "🛒";
-  const verifiedLabel =
-    profile.kycLevel >= 2 ? `✓ Verified ${profile.primaryTag || "User"}` : null;
 
   return (
     <Layout onAssistant={onAssistant}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
+        select{color-scheme:${T.name}}
       `}</style>
 
       {!isMe && (
@@ -464,7 +632,7 @@ export default function ProfilePage({ onAssistant }) {
           background: T.surface,
           border: `1px solid ${T.border}`,
           borderRadius: 20,
-          padding: "24px",
+          padding: 24,
           marginBottom: 16,
         }}
       >
@@ -503,13 +671,13 @@ export default function ProfilePage({ onAssistant }) {
                     background: T.amber,
                     border: "none",
                     cursor: "pointer",
-                    fontSize: 12,
+                    fontSize: 13,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  {uploading ? "..." : "✎"}
+                  {uploading ? "…" : "✎"}
                 </button>
               </>
             )}
@@ -521,7 +689,7 @@ export default function ProfilePage({ onAssistant }) {
                 fontWeight: 800,
                 fontSize: 20,
                 color: T.text,
-                marginBottom: 4,
+                marginBottom: 6,
               }}
             >
               {profile.name}
@@ -530,7 +698,14 @@ export default function ProfilePage({ onAssistant }) {
               <Badge variant="muted">
                 {tagIcon} {profile.primaryTag || "buyer"}
               </Badge>
-              {verifiedLabel && <Badge variant="jade">{verifiedLabel}</Badge>}
+              {profile.kycLevel >= 2 && (
+                <Badge variant="jade">
+                  ✓ Verified {profile.primaryTag || "User"}
+                </Badge>
+              )}
+              {profile.kycLevel >= 3 && (
+                <Badge variant="jade">✓ Fully Verified</Badge>
+              )}
             </div>
           </div>
           {isMe && (
@@ -588,8 +763,15 @@ export default function ProfilePage({ onAssistant }) {
               🪪{" "}
               {profile.kycLevel === 0
                 ? "Start verification"
-                : "Continue verification"}
+                : profile.kycLevel === 1
+                  ? "Submit ID details (Level 2)"
+                  : "Complete identity check (Level 3)"}
             </Button>
+          )}
+          {profile.kycLevel === 3 && (
+            <div style={{ textAlign: "center", fontSize: 13, color: T.jade }}>
+              ✅ Your identity is fully verified
+            </div>
           )}
         </Card>
       )}
@@ -661,7 +843,13 @@ export default function ProfilePage({ onAssistant }) {
           updateUser(updated);
         }}
       />
-      <KYCModal open={kycModal} onClose={() => setKycModal(false)} />
+
+      <KYCModal
+        open={kycModal}
+        onClose={() => setKycModal(false)}
+        currentLevel={profile.kycLevel || 0}
+        onDone={refreshProfile}
+      />
     </Layout>
   );
 }

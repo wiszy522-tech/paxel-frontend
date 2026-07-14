@@ -306,37 +306,47 @@ export function AssistantFAB({ onOpen }) {
   const [hovered, setHovered] = useState(false);
 
   return (
-    <button
-      onClick={onOpen}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      title="PaxeL Assistant"
-      style={{
-        position: "fixed",
-        right: 16,
-        bottom: 88,
-        zIndex: 99,
-        width: 52,
-        height: 52,
-        borderRadius: "50%",
-        border: `2px solid ${hovered ? T.amber : T.amberBorder}`,
-        background: T.surface,
-        cursor: "pointer",
-        padding: 0,
-        overflow: "hidden",
-        boxShadow: hovered
-          ? `0 8px 24px rgba(242,169,59,0.4)`
-          : `0 4px 16px ${T.shadow}`,
-        transform: hovered ? "scale(1.08)" : "scale(1)",
-        transition: "all 0.2s",
-      }}
-    >
-      <img
-        src="/logo.jpg"
-        alt="AI"
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-      />
-    </button>
+    <>
+      <style>{`
+        @keyframes fabPulse {
+          0% { box-shadow: 0 0 0 0 rgba(242,169,59,0.55); }
+          70% { box-shadow: 0 0 0 14px rgba(242,169,59,0); }
+          100% { box-shadow: 0 0 0 0 rgba(242,169,59,0); }
+        }
+      `}</style>
+      <button
+        onClick={onOpen}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        title="PaxeL Assistant"
+        style={{
+          position: "fixed",
+          right: 16,
+          bottom: 88,
+          zIndex: 99,
+          width: 52,
+          height: 52,
+          borderRadius: "50%",
+          border: `2px solid ${hovered ? T.amber : T.amberBorder}`,
+          background: T.surface,
+          cursor: "pointer",
+          padding: 0,
+          overflow: "hidden",
+          boxShadow: hovered
+            ? `0 8px 24px rgba(242,169,59,0.4)`
+            : `0 4px 16px ${T.shadow}`,
+          transform: hovered ? "scale(1.08)" : "scale(1)",
+          transition: "all 0.2s",
+          animation: hovered ? "none" : "fabPulse 2.2s ease-out infinite",
+        }}
+      >
+        <img
+          src="/logo.jpg"
+          alt="AI"
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </button>
+    </>
   );
 }
 

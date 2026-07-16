@@ -175,34 +175,32 @@ function WaybillForm({ tradeCode, onDone }) {
         >
           Live photo of wrapped parcel (optional but recommended)
         </label>
-        <input
-          ref={photoRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: "none" }}
-          onChange={handlePhoto}
-        />
-        <button
-          type="button"
-          onClick={() => photoRef.current?.click()}
-          style={{
-            width: "100%",
-            border: `2px dashed ${preview ? T.jade : T.border}`,
-            background: T.bg,
-            color: preview ? T.jade : T.textDim,
-            borderRadius: 10,
-            padding: "14px",
-            cursor: "pointer",
-            fontSize: 14,
-            fontFamily: "'Inter',sans-serif",
-            textAlign: "center",
-          }}
-        >
-          {preview
-            ? "✓ Photo taken — tap to retake"
-            : "📷 Take live photo of parcel"}
-        </button>
+        <label style={{ display: "block", width: "100%", cursor: "pointer" }}>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+            onChange={handlePhoto}
+          />
+          <div
+            style={{
+              width: "100%",
+              border: `2px dashed ${preview ? T.jade : T.border}`,
+              background: T.bg,
+              color: preview ? T.jade : T.textDim,
+              borderRadius: 10,
+              padding: "14px",
+              fontSize: 14,
+              fontFamily: "'Inter',sans-serif",
+              textAlign: "center",
+            }}
+          >
+            {preview
+              ? "✓ Photo taken — tap to retake"
+              : "📷 Take live photo of parcel"}
+          </div>
+        </label>
         {preview && (
           <img
             src={preview}
@@ -706,27 +704,36 @@ export default function TradeDetailPage({ onAssistant }) {
             📦 Your goods are on the way! When they arrive, take a live photo
             and confirm receipt to release payment to the seller.
           </div>
-          <input
-            ref={receiptRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              const f = e.target.files[0];
-              if (!f) return;
-              const url = URL.createObjectURL(f);
-              await doAction("confirm-receipt", { receiptPhotoUrl: url });
-            }}
-          />
-          <Button
-            fullWidth
-            variant="jade"
-            onClick={() => receiptRef.current?.click()}
-            loading={actionLoading}
-          >
-            📷 Take photo & confirm receipt
-          </Button>
+          <label style={{ display: "block", width: "100%" }}>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+              onChange={async (e) => {
+                const f = e.target.files[0];
+                if (!f) return;
+                const url = URL.createObjectURL(f);
+                await doAction("confirm-receipt", { receiptPhotoUrl: url });
+              }}
+            />
+            <div
+              style={{
+                width: "100%",
+                background: "#3FA66B",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 15,
+                padding: "13px 0",
+                borderRadius: 10,
+                textAlign: "center",
+                cursor: "pointer",
+                fontFamily: "'Inter',sans-serif",
+              }}
+            >
+              📷 Take photo & confirm receipt
+            </div>
+          </label>
           <div style={{ marginTop: 8 }}>
             <Button
               fullWidth
